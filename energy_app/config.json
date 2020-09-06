@@ -9,8 +9,8 @@
 		}
 	},
 	"projector": {
-		"width": 1280,
-		"height": 1024,
+		"width": 1680,
+		"height": 1050,
 		"screen": 1,
 		"marker": {
 			"size": 120,

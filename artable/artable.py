@@ -1,22 +1,58 @@
+import time
+
 import numpy as np
 import cv2
 from cv2 import aruco
 import screeninfo
+from threading import Thread
 
 from artable.configuration import Configuration
-from PIL.Image import Image as PILimg
-from PIL import Image
+from PIL.Image import Image as PILImage
+from PIL import Image  # TODO: switch to cv2 only
+
+from artable.plugins.Plugin import Plugin
 
 
 class ARTable:
     def __init__(self, config: Configuration):
         self.config = config
         self.vc = self.__get_camera()
-        (self.table_camera_t, self.camera_table_t), (self.camera_projector_t, self.table_camera_t) = self.__calibrate()
+        (self.table_camera_t, self.camera_table_t), (
+            self.projector_camera_t, self.camera_projector_t) = self.__calibrate()
+        cv2.destroyWindow('Marker (Calibration)')
+        self.plugins = set()
+        self.stopped = False
         self.__start_update_loop()
-        self.plugins = []
+        self.image_corners = ((0, 0), self.config.table_size)
+        self.image_size = self.config.table_size
 
-    def display(self, image: PILimg, xy: (float, float) = None):
+    def table_to_image_coords(self, points):
+        points = np.array(points)
+        keep_dim = True
+        if np.array(points).ndim == 1:
+            keep_dim = False
+            points = [points]
+        image_width_after = self.image_corners[1][0] - self.image_corners[0][0]
+        image_height_after = self.image_corners[1][1] - self.image_corners[0][1]
+        for point in points:
+            point[0] = (point[0] - self.image_corners[0][0]) * self.image_size[0] / image_width_after
+            point[1] = (point[1] - self.image_corners[0][1]) * self.image_size[1] / image_height_after
+        return points if keep_dim else points[0]
+
+    def image_to_table_coords(self, points):
+        points = np.array(points)
+        keep_dim = True
+        if points.ndim == 1:
+            keep_dim = False
+            points = [points]
+        image_width_after = self.image_corners[1][0] - self.image_corners[0][0]
+        image_height_after = self.image_corners[1][1] - self.image_corners[0][1]
+        for point in points:
+            point[0] = (point[0] * image_width_after / self.image_size[0]) + self.image_corners[0][0]
+            point[1] = (point[1] * image_height_after / self.image_size[1]) + self.image_corners[0][1]
+        return points if keep_dim else points[0]
+
+    def display(self, image: PILImage, xy: (float, float) = None):
         """
         Shows an image at a specified coordinate.
 
@@ -29,15 +65,39 @@ class ARTable:
 
         if xy is None:
             # stretch
-            screen = image.resize(self.config.projector_resolution)
+            self.image_size = image.size
+            self.image_corners = ((0, 0), self.config.table_size)
+            screen = image.resize(self.config.table_size)
         else:
             # move
-            screen = Image.new("RGB", self.config.projector_resolution, "black")
+            self.image_size = image.size
+            self.image_corners = (xy, (xy[0] + image.width, xy[1] + image.height))
+            screen = Image.new("RGB", self.config.table_size, "black")
             screen.paste(image, xy)
         # transform & show
-        table_image = cv2.warpPerspective(screen, np.dot(self.camera_projector_t, self.table_camera_t),
+        table_image = cv2.warpPerspective(np.asanyarray(screen), np.dot(self.camera_projector_t, self.table_camera_t),
                                           self.config.projector_resolution, flags=1)
+        table_image = cv2.cvtColor(table_image, cv2.COLOR_RGB2BGR)
         cv2.imshow('window', table_image)
+        cv2.waitKey(1)
+
+    def add_plugin(self, plugin: Plugin):
+        plugin.set_transforms(self.table_camera_t, self.camera_table_t, self.camera_projector_t,
+                              self.projector_camera_t)
+        self.plugins.add(plugin)
+
+    def remove_plugin(self, plugin: Plugin):
+        plugin.removed()
+        self.plugins.remove(plugin)
+
+    def get_size(self, unit: str):
+        dimensions = {
+            "mm": self.config.table_size,
+            "cm": tuple([x / 10 for x in self.config.table_size]),
+            "m": tuple([x / 1000 for x in self.config.table_size]),
+            "px": self.config.projector_resolution,
+        }
+        return dimensions.get(unit)
 
     def __get_color_image(self):
         res, frame = self.vc.read()
@@ -50,12 +110,13 @@ class ARTable:
         src = np.array(src, dtype="float32")
         mat_found = False
         while not mat_found:
-            cv2.waitKey(1)
-            gray = cv2.cvtColor(self.__get_color_image(), cv2.COLOR_BGR2GRAY)
+            image = self.__get_color_image()
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
             corners, ids, rejected_img_points = aruco.detectMarkers(gray, aruco_dict, parameters=parameters)
-            frame_markers = aruco.drawDetectedMarkers(gray.copy(), corners, ids)
-            cv2.namedWindow('Marker', cv2.WINDOW_AUTOSIZE)
-            cv2.imshow('Marker', frame_markers)
+            frame_markers = aruco.drawDetectedMarkers(image, corners, ids, (0, 0, 255))
+            cv2.namedWindow('Marker (Calibration)', cv2.WINDOW_AUTOSIZE)
+            cv2.imshow('Marker (Calibration)', frame_markers)
+            cv2.waitKey(1)
             if ids is not None:
                 np_shape = np.array(corners)
                 c = np_shape[:, 0, 0, :]
@@ -115,6 +176,7 @@ class ARTable:
         cv2.setWindowProperty("window", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
         cv2.moveWindow("window", screen.x - 1, screen.y - 1)
         cv2.imshow("window", img)
+        cv2.waitKey(1)
 
         return self.__calculate_transformation(table_marker_ids, table_abs_marker_pos, aruco_dict, parameters), \
                self.__calculate_transformation(proj_marker_ids, proj_abs_marker_pos, aruco_dict, parameters)
@@ -132,7 +194,17 @@ class ARTable:
         return vc
 
     def __start_update_loop(self):
-        # new thread:
-        #     get next camera frame
-        #     forward to plugins
+        t = Thread(target=self.__update)
+        t.daemon = False
+        t.start()
         pass
+
+    def stop(self):
+        """Freezes all plugins."""
+        self.stopped = True
+
+    def __update(self):
+        while not self.stopped:
+            frame = self.__get_color_image()
+            for plugin in self.plugins:
+                plugin.update(frame)
