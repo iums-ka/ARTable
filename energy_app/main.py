@@ -1,34 +1,53 @@
 import time
+from threading import Thread
 
 import numpy as np
 
 from artable.plugins import Aruco, ArucoAreaListener
 from artable import ARTable, Configuration
-import energy_app.dynamic_ui as ui
+from energy_app.dynamic_ui import UI
+import energy_app.dynamic_ui as dyn
+from energy_app.dynamic_ui import find_bounds_for_name as find
+from queue import LifoQueue
 
-
-class TestAreaListener(ArucoAreaListener):
-    def __init__(self, area, ids, ar):
+class MapListener(ArucoAreaListener):
+    def __init__(self, area, ids, ar, dynamic_ui):
         super().__init__(area, ids)
         self.table = ar
+        self.ui = dynamic_ui
+        self.runner = None
 
     def on_enter(self, marker_id, position):
-        print("Marker {} entered at {}".format(marker_id, self.table.table_to_image_coords(position)))
-
-    def on_leave(self, marker_id, last_position):
-        print("Marker {} left at {}".format(marker_id, self.table.table_to_image_coords(last_position)))
+        self.set_insolation(position)
 
     def on_move(self, marker_id, last_position, position):
-        print("Marker {} moved from {} to {}".format(marker_id, self.table.table_to_image_coords(last_position),
-                                                     self.table.table_to_image_coords(position)))
+        self.set_insolation(position)
 
-print("start",time.time())
+    def on_leave(self, marker_id, last_position):
+        global additional_energy
+        additional_energy = 0
+
+    def set_insolation(self, position):
+        global additional_energy
+        pos = self.table.table_to_image_coords(position)
+        additional_energy = (self.ui.get_insolation(pos) - 1100)/100
+        queue.put(None)  # call for update
+
+def update_table():
+    # print("Coverage: {:3f}".format(.5 + additional_energy))
+    image = ui.render("Baden-Württemberg", 1, 1, .5 + additional_energy, .5, .5, .7, .7, .7)
+    table.display(image)
+
+ui = UI()
+bounds = find("Baden-Württemberg")
+ui.set_position(bounds)
+additional_energy = 0
 table = ARTable(Configuration("config.json"))
-print("render",time.time())
-image = ui.render_default()
-print("show",time.time())
-table.display(image)
-print("done",time.time())
 aruco = Aruco()
 table.add_plugin(aruco)
-aruco.add_listener(TestAreaListener(table.image_to_table_coords(((362, 173), (2783, 2410))), (4,), table))
+update_table()
+aruco.add_listener(MapListener(table.image_to_table_coords(ui.get_map_area()), (4,), table, ui))
+queue = LifoQueue()
+while True:
+    queue.get(block=True)
+    update_table()

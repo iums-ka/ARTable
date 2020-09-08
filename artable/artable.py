@@ -1,3 +1,4 @@
+import asyncio
 import time
 
 import numpy as np
@@ -22,9 +23,10 @@ class ARTable:
         cv2.destroyWindow('Marker (Calibration)')
         self.plugins = set()
         self.stopped = False
-        self.__start_update_loop()
         self.image_corners = ((0, 0), self.config.table_size)
         self.image_size = self.config.table_size
+
+        self.__start_update_loop()
 
     def table_to_image_coords(self, points):
         points = np.array(points)
@@ -78,7 +80,10 @@ class ARTable:
         table_image = cv2.warpPerspective(np.asanyarray(screen), np.dot(self.camera_projector_t, self.table_camera_t),
                                           self.config.projector_resolution, flags=1)
         table_image = cv2.cvtColor(table_image, cv2.COLOR_RGB2BGR)
-        cv2.imshow('window', table_image)
+        cv2.namedWindow("window", cv2.WND_PROP_FULLSCREEN)
+        cv2.setWindowProperty("window", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+        #cv2.moveWindow("window", screen.x - 1, screen.y - 1)
+        cv2.imshow("window", table_image)
         cv2.waitKey(1)
 
     def add_plugin(self, plugin: Plugin):
@@ -194,7 +199,7 @@ class ARTable:
         return vc
 
     def __start_update_loop(self):
-        t = Thread(target=self.__update)
+        t = Thread(target=self.__update, args=(asyncio.new_event_loop(),))
         t.daemon = False
         t.start()
         pass
@@ -203,7 +208,8 @@ class ARTable:
         """Freezes all plugins."""
         self.stopped = True
 
-    def __update(self):
+    def __update(self, loop):
+        asyncio.set_event_loop(loop)
         while not self.stopped:
             frame = self.__get_color_image()
             for plugin in self.plugins:
