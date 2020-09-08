@@ -45,7 +45,7 @@ class UI:
 
     def __init__(self):
         self.map_data = None
-        self.map_area = ((362, 173), (2783, 2410))
+        self.map_area = ((362, 173), (2784, 2606))
         self.insolation = geopandas.read_file(
             "resources/Globalstrahlung/Globalstrahlung (kWh_m²)_polygon.shp"
         ).to_crs(epsg=4326)
@@ -139,6 +139,9 @@ class UI:
 
     def get_map_size(self):
         return (self.map_area[1][0] - self.map_area[0][0]), (self.map_area[1][1] - self.map_area[0][1])
+
+    def get_map_interaction_area(self):
+        return self.map_area[0], (self.map_area[1][0], self.map_area[1][1] - 196)
 
 
 if __name__ == '__main__':

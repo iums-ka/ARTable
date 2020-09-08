@@ -46,7 +46,7 @@ table = ARTable(Configuration("config.json"))
 aruco = Aruco()
 table.add_plugin(aruco)
 update_table()
-aruco.add_listener(MapListener(table.image_to_table_coords(ui.get_map_area()), (4,), table, ui))
+aruco.add_listener(MapListener(table.image_to_table_coords(ui.get_map_interaction_area()), (4,), table, ui))
 queue = LifoQueue()
 while True:
     queue.get(block=True)

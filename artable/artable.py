@@ -9,7 +9,6 @@ from threading import Thread
 
 from artable.configuration import Configuration
 from PIL.Image import Image as PILImage
-from PIL import Image  # TODO: switch to cv2 only
 
 from artable.plugins.Plugin import Plugin
 
