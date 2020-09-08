@@ -64,25 +64,24 @@ class ARTable:
         :param image: PIL-Image to display.
         :param xy: top left corner in mm.
         """
-
+        self.image_size = image.size
+        image = np.array(image)
         if xy is None:
             # stretch
-            self.image_size = image.size
             self.image_corners = ((0, 0), self.config.table_size)
-            screen = image.resize(self.config.table_size)
+            screen = cv2.resize(image,self.config.table_size)
         else:
             # move
-            self.image_size = image.size
-            self.image_corners = (xy, (xy[0] + image.width, xy[1] + image.height))
-            screen = Image.new("RGB", self.config.table_size, "black")
-            screen.paste(image, xy)
+            self.image_corners = (xy, (xy[0] + self.image_size[0], xy[1] + self.image_size[1]))
+            screen = np.zeros((*self.config.table_size, 3), np.uint8)
+            screen[xy[0], xy[1]] = image
         # transform & show
-        table_image = cv2.warpPerspective(np.asanyarray(screen), np.dot(self.camera_projector_t, self.table_camera_t),
+        table_image = cv2.warpPerspective(screen, np.dot(self.camera_projector_t, self.table_camera_t),
                                           self.config.projector_resolution, flags=1)
         table_image = cv2.cvtColor(table_image, cv2.COLOR_RGB2BGR)
         cv2.namedWindow("window", cv2.WND_PROP_FULLSCREEN)
         cv2.setWindowProperty("window", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-        #cv2.moveWindow("window", screen.x - 1, screen.y - 1)
+        # cv2.moveWindow("window", screen.x - 1, screen.y - 1)
         cv2.imshow("window", table_image)
         cv2.waitKey(1)
 
