@@ -25,8 +25,6 @@ class ARTable:
         self.image_corners = ((0, 0), self.config.table_size)
         self.image_size = self.config.table_size
 
-        self.__start_update_loop()
-
     def table_to_image_coords(self, points):
         points = np.array(points)
         keep_dim = True
@@ -212,3 +210,6 @@ class ARTable:
             frame = self.__get_color_image()
             for plugin in self.plugins:
                 plugin.update(frame)
+
+    def start(self):
+        self.__start_update_loop()

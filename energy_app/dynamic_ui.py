@@ -46,16 +46,17 @@ class UI:
     def __init__(self):
         self.map_data = None
         self.map_area = ((362, 173), (2784, 2606))
+        self.place_selection_area = ((2615, 2446), (2743, 2574))
         self.insolation = geopandas.read_file(
             "resources/Globalstrahlung/Globalstrahlung (kWh_m²)_polygon.shp"
         ).to_crs(epsg=4326)
         self.static_layer = Image.open('resources/static-layer.png')
         self.map_image = None
 
-    def set_position(self, target_bounds):
+    def set_position(self, target_bounds, zoom_in=2):
         # hint: lon, lat instead of lat, lon
         self.map_data = geotiler.Map(extent=target_bounds, size=self.get_map_size())
-        self.map_data.zoom += 2
+        self.map_data.zoom += zoom_in
         cache = Cache("tiles_cache")
         downloader = partial(caching_downloader, cache.get, cache.set, fetch_tiles)
         self.map_image = geotiler.render_map(self.map_data, downloader=downloader)
@@ -131,8 +132,10 @@ class UI:
         filtered = self.insolation.iloc[
             list(spatial_index.intersection((x - epsilon, y - epsilon, x + epsilon, y + epsilon)))
         ]
-        closest = filtered.distance(Point(map_coordinates)).idxmin()
-        return self.insolation.iloc[closest].CODE
+        if not len(filtered) == 0:
+            closest = filtered.distance(Point(map_coordinates)).idxmin()
+            return self.insolation.iloc[closest].CODE
+        return None
 
     def get_map_area(self):
         return self.map_area
@@ -142,6 +145,9 @@ class UI:
 
     def get_map_interaction_area(self):
         return self.map_area[0], (self.map_area[1][0], self.map_area[1][1] - 196)
+
+    def get_place_selection_area(self):
+        return self.place_selection_area
 
 
 if __name__ == '__main__':

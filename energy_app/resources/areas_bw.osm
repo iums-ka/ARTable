@@ -25068,7 +25068,7 @@
     <tag k="type" v="boundary"/>
   </relation>
   <relation id="3286558">
-    <bounds minlat="49.4739102" minlon="8.4711204" maxlat="49.4940040" maxlon="8.5084720"/>
+    <bounds minlat="49.4739102" minlon="8.4711204" maxlat="49.4940040" maxlon="8."/>
     <tag k="admin_level" v="10"/>
     <tag k="boundary" v="administrative"/>
     <tag k="description" v="Stadtteil"/>
