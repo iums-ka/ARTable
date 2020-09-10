@@ -15,11 +15,13 @@ class ArucoPlugin(Plugin):
 
     def update(self, image: np.array):
         markers = self.__get_tangible_coordinates(image)
+        marker_ids = []
+        positions = []
         for marker in markers:
-            marker_id = marker[0][0]
-            position = marker[1]
-            for listener in self.listeners:
-                listener.update(marker_id, position)  # TODO: update vanishing markers
+            marker_ids.append(marker[0][0])
+            positions.append(marker[1])
+        for listener in self.listeners:
+            listener.update(marker_ids, positions)
 
     def add_listener(self, listener: ListenerBase):
         self.listeners.add(listener)
