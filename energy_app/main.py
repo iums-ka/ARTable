@@ -1,8 +1,5 @@
 import json
-import time
-from threading import Thread
-
-import numpy as np
+from pynput.keyboard import HotKey, Listener
 
 from artable.plugins import Aruco, ArucoAreaListener
 from artable import ARTable, Configuration
@@ -12,6 +9,15 @@ from queue import LifoQueue
 
 
 class MapListener(ArucoAreaListener):
+    def reload(self):
+        self.energy = {}
+        self.cost = {}
+        self.emission = {}
+        config = json.load(open("resources/plant_types.json", mode="r", encoding="utf-8"))
+        self.plants = {}
+        for plant in config["types"]:
+            self.plants[plant["marker"]] = plant
+
     def __init__(self, area, ids, ar, dynamic_ui):
         super().__init__(area, ids)
         self.table = ar
@@ -20,9 +26,7 @@ class MapListener(ArucoAreaListener):
         self.cost = {}
         self.emission = {}
         self.plants = {}
-        config = json.load(open("resources/plant_types.json", mode="r", encoding="utf-8"))
-        for plant in config["types"]:
-            self.plants[plant["marker"]] = plant
+        self.reload()
 
     def on_enter(self, marker_id, position):
         self.update_energy(marker_id, position)
@@ -31,9 +35,9 @@ class MapListener(ArucoAreaListener):
         self.update_energy(marker_id, position)
 
     def on_leave(self, marker_id, last_position):
-        self.energy.pop(marker_id)
-        self.cost.pop(marker_id)
-        self.emission.pop(marker_id)
+        for a_dict in (self.energy, self.cost, self.emission):
+            if marker_id in a_dict:
+                a_dict.pop(marker_id)
         self.sum_and_update()
 
     def update_energy(self, marker_id, position):
@@ -63,15 +67,20 @@ class MapListener(ArucoAreaListener):
 
 
 class PlaceListener(ArucoAreaListener):
-    def __init__(self, area, ids, ar, dynamic_ui):
-        super().__init__(area, ids)
-        self.table = ar
-        self.ui = dynamic_ui
+    def reload(self):
         config = json.load(open("resources/shortcut_places.json", mode="r", encoding="utf-8"))
         self.keyboard_id = config["keyboard"]
         self.places = {}
         for place in config["places"]:
             self.places[place["marker"]] = place
+
+    def __init__(self, area, ids, ar, dynamic_ui):
+        super().__init__(area, ids)
+        self.table = ar
+        self.ui = dynamic_ui
+        self.keyboard_id = -1
+        self.places = {}
+        self.reload()
 
     def on_enter(self, marker_id, position):
         if marker_id != self.keyboard_id:
@@ -101,6 +110,21 @@ def update_table():
     table.display(image)
 
 
+def reload_configs():
+    map_listener.reload()
+    place_listener.reload()
+    print("Reloaded.")
+
+
+def for_canonical(f):
+    return lambda k: f(keyboard_listener.canonical(k))
+
+
+reload_hotkey = HotKey(HotKey.parse("<ctrl>+r"), reload_configs)
+keyboard_listener = Listener(
+    on_press=for_canonical(reload_hotkey.press),
+    on_release=for_canonical(reload_hotkey.release))
+keyboard_listener.start()
 ui = UI()
 place_name = "Karlsruhe"
 place_population = 313092
@@ -114,8 +138,10 @@ table = ARTable(Configuration("config.json"))
 aruco = Aruco()
 table.add_plugin(aruco)
 update_table()
-aruco.add_listener(MapListener(table.image_to_table_coords(ui.get_map_interaction_area()), (4, 10,), table, ui))
-aruco.add_listener(PlaceListener(table.image_to_table_coords(ui.get_place_selection_area()), (4, 10,), table, ui))
+map_listener = MapListener(table.image_to_table_coords(ui.get_map_interaction_area()), (4, 10,), table, ui)
+aruco.add_listener(map_listener)
+place_listener = PlaceListener(table.image_to_table_coords(ui.get_place_selection_area()), (4, 10,), table, ui)
+aruco.add_listener(place_listener)
 table.start()
 queue = LifoQueue()
 while True:

@@ -49,9 +49,9 @@ class UI:
         self.place_selection_area = ((2615, 2446), (2743, 2574))
         print("Loading datasets...")
         self.insolation = geopandas.read_file(
-            "resources/Globalstrahlung/Globalstrahlung (kWh_m²)_polygon.shp"
+            "resources/Globalstrahlung/Globalstrahlung (kWh_m²)_polygon.shp", encoding='utf-8'
         ).to_crs(epsg=4326)
-        self.wind_potential = geopandas.read_file("resources/windatlas_flaechen_2019.json")
+        self.wind_potential = geopandas.read_file("resources/windatlas_flaechen_2019.json", encoding='utf-8')
         self.wind_potential = self.wind_potential.replace(
             {"<= 75": 75, "> 75 - 105": 105, "> 105 - 145": 145, "> 145 - 190": 190, "> 190 - 250": 250,
              "> 250 - 310": 310, "> 310 - 375": 375, "> 375 - 515": 515, "> 515 - 660": 660, "> 660 - 1.600": 1000})

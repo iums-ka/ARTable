@@ -3,7 +3,7 @@
     {
       "name": "Windpark",
       "type": "wind",
-      "energy_formula": "datapoint*100",
+      "energy_formula": "datapoint*10",
       "cost": 0.2,
       "emission": -0.25,
       "marker": 10
@@ -11,7 +11,7 @@
     {
       "name": "Solarpark",
       "type": "solar",
-      "energy_formula": "(datapoint-1000)*100",
+      "energy_formula": "(datapoint-1093)*800",
       "cost": -0.3,
       "emission": -0.1,
       "marker": 4
