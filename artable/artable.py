@@ -17,8 +17,10 @@ class ARTable:
     def __init__(self, config: Configuration):
         self.config = config
         self.vc = self.__get_camera()
+        print("Calibrating table...")
         (self.table_camera_t, self.camera_table_t), (
             self.projector_camera_t, self.camera_projector_t) = self.__calibrate()
+        print("Done.")
         cv2.destroyWindow('Marker (Calibration)')
         self.plugins = set()
         self.stopped = False

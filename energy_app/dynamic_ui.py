@@ -47,9 +47,15 @@ class UI:
         self.map_data = None
         self.map_area = ((362, 173), (2784, 2606))
         self.place_selection_area = ((2615, 2446), (2743, 2574))
+        print("Loading datasets...")
         self.insolation = geopandas.read_file(
             "resources/Globalstrahlung/Globalstrahlung (kWh_m²)_polygon.shp"
         ).to_crs(epsg=4326)
+        self.wind_potential = geopandas.read_file("resources/windatlas_flaechen_2019.json")
+        self.wind_potential = self.wind_potential.replace(
+            {"<= 75": 75, "> 75 - 105": 105, "> 105 - 145": 145, "> 145 - 190": 190, "> 190 - 250": 250,
+             "> 250 - 310": 310, "> 310 - 375": 375, "> 375 - 515": 515, "> 515 - 660": 660, "> 660 - 1.600": 1000})
+        print("Done.")
         self.static_layer = Image.open('resources/static-layer.png')
         self.map_image = None
 
@@ -120,6 +126,12 @@ class UI:
                            default_coverage_goal, default_emission_goal, default_cost_goal)
 
     def get_insolation(self, image_coordinates):
+        return self.closest_tile(image_coordinates, self.insolation, "CODE")
+
+    def get_wind(self, image_coordinates):
+        return self.closest_tile(image_coordinates, self.wind_potential, "klasse")
+
+    def closest_tile(self, image_coordinates, dataframe, key):
         relative_coordinates = ((image_coordinates[0] - self.get_map_area()[0][0]),
                                 (image_coordinates[1] - self.get_map_area()[0][1]))
         map_coordinates = self.map_data.geocode(relative_coordinates)
@@ -128,13 +140,13 @@ class UI:
         # return griddata(points, values, map_coordinates, method='cubic')
         epsilon = 0.1
         x, y = map_coordinates
-        spatial_index = self.insolation.sindex
-        filtered = self.insolation.iloc[
+        spatial_index = dataframe.sindex
+        filtered = dataframe.iloc[
             list(spatial_index.intersection((x - epsilon, y - epsilon, x + epsilon, y + epsilon)))
         ]
         if not len(filtered) == 0:
             closest = filtered.distance(Point(map_coordinates)).idxmin()
-            return self.insolation.iloc[closest].CODE
+            return dataframe.iloc[closest][key]
         return None
 
     def get_map_area(self):
