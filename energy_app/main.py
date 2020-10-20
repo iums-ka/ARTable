@@ -7,6 +7,8 @@ from energy_app.dynamic_ui import UI
 from energy_app.dynamic_ui import find_bounds_for_name as find
 from queue import LifoQueue
 
+import paho.mqtt.client as mqtt
+
 
 class MapListener(ArucoAreaListener):
     def reload(self):
@@ -18,10 +20,11 @@ class MapListener(ArucoAreaListener):
         for plant in config["types"]:
             self.plants[plant["marker"]] = plant
 
-    def __init__(self, area, ids, ar, dynamic_ui):
+    def __init__(self, area, ids, ar, dynamic_ui, mqtt_client):
         super().__init__(area, ids)
         self.table = ar
         self.ui = dynamic_ui
+        self.client = mqtt_client
         self.energy = {}
         self.cost = {}
         self.emission = {}
@@ -29,16 +32,28 @@ class MapListener(ArucoAreaListener):
         self.reload()
 
     def on_enter(self, marker_id, position):
+        coords = self.table_pos_to_geocode(position)
+        self.client.publish("MARKER", "enter:" + self.plants[marker_id]["name"] + ":"
+                            + str(coords[0]) + ":" + str(coords[1]))
         self.update_energy(marker_id, position)
 
     def on_move(self, marker_id, last_position, position):
+        coords = self.table_pos_to_geocode(position)
+        self.client.publish("MARKER", "move:" + self.plants[marker_id]["name"] + ":"
+                            + str(coords[0]) + ":" + str(coords[1]))
         self.update_energy(marker_id, position)
 
     def on_leave(self, marker_id, last_position):
+        coords = self.table_pos_to_geocode(last_position)
+        self.client.publish("MARKER", "leave:" + self.plants[marker_id]["name"] + ":"
+                            + str(coords[0]) + ":" + str(coords[1]))
         for a_dict in (self.energy, self.cost, self.emission):
             if marker_id in a_dict:
                 a_dict.pop(marker_id)
         self.sum_and_update()
+
+    def table_pos_to_geocode(self, position):
+        return self.ui.image_coordinates_to_geocode(self.table.table_to_image_coords(position))
 
     def update_energy(self, marker_id, position):
         plant = self.plants[marker_id]
@@ -74,10 +89,11 @@ class PlaceListener(ArucoAreaListener):
         for place in config["places"]:
             self.places[place["marker"]] = place
 
-    def __init__(self, area, ids, ar, dynamic_ui):
+    def __init__(self, area, ids, ar, dynamic_ui, mqtt_client):
         super().__init__(area, ids)
         self.table = ar
         self.ui = dynamic_ui
+        self.client = mqtt_client
         self.keyboard_id = -1
         self.places = {}
         self.reload()
@@ -97,6 +113,7 @@ class PlaceListener(ArucoAreaListener):
         place = self.places[marker_id]
         ui.set_position(place["bounds"], zoom_in=0)
         place_name, place_population, place_energy = place["name"], place["population"], place["energy"]
+        self.client.publish("PLACE", place_name + ":" + str(place_population) + ":" + str(place_energy))
         queue.put(None)  # call for update
 
 
@@ -120,30 +137,38 @@ def for_canonical(f):
     return lambda k: f(keyboard_listener.canonical(k))
 
 
-reload_hotkey = HotKey(HotKey.parse("<ctrl>+r"), reload_configs)
-keyboard_listener = Listener(
-    on_press=for_canonical(reload_hotkey.press),
-    on_release=for_canonical(reload_hotkey.release))
-keyboard_listener.start()
-ui = UI()
-place_name = "Karlsruhe"
-place_population = 313092
-place_energy = 9100
-bounds = find(place_name)
-ui.set_position(bounds)
-additional_energy = 0
-additional_emission = 0
-additional_cost = 0
-table = ARTable(Configuration("config.json"))
-aruco = Aruco()
-table.add_plugin(aruco)
-update_table()
-map_listener = MapListener(table.image_to_table_coords(ui.get_map_interaction_area()), (4, 10,), table, ui)
-aruco.add_listener(map_listener)
-place_listener = PlaceListener(table.image_to_table_coords(ui.get_place_selection_area()), (4, 10,), table, ui)
-aruco.add_listener(place_listener)
-table.start()
-queue = LifoQueue()
-while True:
-    queue.get(block=True)
+if __name__ == '__main__':
+    client = mqtt.Client("KATZE_Tisch")
+    client.connect("localhost")
+    client.loop_start()
+    client.publish("SYSTEM","startup")
+
+    reload_hotkey = HotKey(HotKey.parse("<ctrl>+r"), reload_configs)
+    keyboard_listener = Listener(
+        on_press=for_canonical(reload_hotkey.press),
+        on_release=for_canonical(reload_hotkey.release))
+    keyboard_listener.start()
+    ui = UI()
+    place_name = "Karlsruhe"
+    place_population = 313092
+    place_energy = 9100
+    bounds = find(place_name)
+    ui.set_position(bounds)
+    additional_energy = 0
+    additional_emission = 0
+    additional_cost = 0
+    table = ARTable(Configuration("config.json"))
+    aruco = Aruco()
+    table.add_plugin(aruco)
     update_table()
+    map_listener = MapListener(table.image_to_table_coords(ui.get_map_interaction_area()), (4, 10,), table, ui, client)
+    aruco.add_listener(map_listener)
+    place_listener = PlaceListener(table.image_to_table_coords(ui.get_place_selection_area()), (4, 10,), table, ui,
+                                   client)
+    aruco.add_listener(place_listener)
+    table.start()
+    client.publish("SYSTEM","running")
+    queue = LifoQueue()
+    while True:
+        queue.get(block=True)
+        update_table()

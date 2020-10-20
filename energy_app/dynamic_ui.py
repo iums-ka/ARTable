@@ -131,10 +131,13 @@ class UI:
     def get_wind(self, image_coordinates):
         return self.closest_tile(image_coordinates, self.wind_potential, "klasse")
 
-    def closest_tile(self, image_coordinates, dataframe, key):
+    def image_coordinates_to_geocode(self, image_coordinates):
         relative_coordinates = ((image_coordinates[0] - self.get_map_area()[0][0]),
                                 (image_coordinates[1] - self.get_map_area()[0][1]))
-        map_coordinates = self.map_data.geocode(relative_coordinates)
+        return self.map_data.geocode(relative_coordinates)
+
+    def closest_tile(self, image_coordinates, dataframe, key):
+        map_coordinates = self.image_coordinates_to_geocode(image_coordinates)
         # points, values = data_provider.sample(
         #    (self.map_data.geocode((0, 0)), self.map_data.geocode(self.get_map_size())))
         # return griddata(points, values, map_coordinates, method='cubic')
