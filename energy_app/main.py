@@ -15,7 +15,7 @@ class MapListener(ArucoAreaListener):
         self.energy = {}
         self.cost = {}
         self.emission = {}
-        config = json.load(open("resources/plant_types.json", mode="r", encoding="utf-8"))
+        config = json.load(open("plant_types.json", mode="r", encoding="utf-8"))
         self.plants = {}
         for plant in config["types"]:
             self.plants[plant["marker"]] = plant
@@ -83,7 +83,7 @@ class MapListener(ArucoAreaListener):
 
 class PlaceListener(ArucoAreaListener):
     def reload(self):
-        config = json.load(open("resources/shortcut_places.json", mode="r", encoding="utf-8"))
+        config = json.load(open("shortcut_places.json", mode="r", encoding="utf-8"))
         self.keyboard_id = config["keyboard"]
         self.places = {}
         for place in config["places"]:
@@ -117,19 +117,50 @@ class PlaceListener(ArucoAreaListener):
         queue.put(None)  # call for update
 
 
+class YearListener(ArucoAreaListener):
+    def reload(self):
+        config = json.load(open("years.json", mode="r", encoding="utf-8"))
+        all_goals = config[str(self.year)]
+        self.goals = (all_goals["coverage_goal"], all_goals["emission_goal"], all_goals["cost_goal"])
+
+    def __init__(self, area, ids, ar, dynamic_ui, mqtt_client, year):
+        super().__init__(area, ids)
+        self.table = ar
+        self.ui = dynamic_ui
+        self.client = mqtt_client
+        self.year = year
+        self.goals = (0, 0, 0)
+        self.reload()
+
+    def on_enter(self, marker_id, position):
+        global coverage_goal, emission_goal, cost_goal
+        coverage_goal, emission_goal, cost_goal = self.goals
+        queue.put(None)  # call for update
+
+    def on_move(self, marker_id, last_position, position):
+        pass
+
+    def on_leave(self, marker_id, last_position):
+        pass
+
+
 def update_table():
     # print("Coverage: {:3f}".format(.5 + additional_energy))
     base_energy = place_energy / 2
     base_emission = 0.5
     base_cost = 0.5
     image = ui.render(place_name, place_population, place_energy, (base_energy + additional_energy) / place_energy,
-                      (base_emission + additional_emission), (base_cost + additional_cost), .7, .2, .4)
+                      (base_emission + additional_emission), (base_cost + additional_cost),
+                      coverage_goal, emission_goal, cost_goal)
     table.display(image)
 
 
 def reload_configs():
     map_listener.reload()
     place_listener.reload()
+    year_2020_listener.reload()
+    year_2030_listener.reload()
+    year_2050_listener.reload()
     print("Reloaded.")
 
 
@@ -141,7 +172,7 @@ if __name__ == '__main__':
     client = mqtt.Client("KATZE_Tisch")
     client.connect("localhost")
     client.loop_start()
-    client.publish("SYSTEM","startup")
+    client.publish("SYSTEM", "startup")
 
     reload_hotkey = HotKey(HotKey.parse("<ctrl>+r"), reload_configs)
     keyboard_listener = Listener(
@@ -157,7 +188,8 @@ if __name__ == '__main__':
     additional_energy = 0
     additional_emission = 0
     additional_cost = 0
-    table = ARTable(Configuration("config.json"))
+    coverage_goal, emission_goal, cost_goal = .7, .2, .4
+    table = ARTable(Configuration("table.json"))
     aruco = Aruco()
     table.add_plugin(aruco)
     update_table()
@@ -166,8 +198,14 @@ if __name__ == '__main__':
     place_listener = PlaceListener(table.image_to_table_coords(ui.get_place_selection_area()), (4, 10,), table, ui,
                                    client)
     aruco.add_listener(place_listener)
+    year_2020_listener = YearListener(table.image_to_table_coords(ui.get_2020_area()), (4,), table, ui, client, 2020)
+    year_2030_listener = YearListener(table.image_to_table_coords(ui.get_2030_area()), (4,), table, ui, client, 2030)
+    year_2050_listener = YearListener(table.image_to_table_coords(ui.get_2050_area()), (4,), table, ui, client, 2050)
+    aruco.add_listener(year_2020_listener)
+    aruco.add_listener(year_2030_listener)
+    aruco.add_listener(year_2050_listener)
     table.start()
-    client.publish("SYSTEM","running")
+    client.publish("SYSTEM", "running")
     queue = LifoQueue()
     while True:
         queue.get(block=True)

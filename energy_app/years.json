@@ -1,0 +1,17 @@
+{
+  "2020": {
+    "coverage_goal": 0.7,
+    "emission_goal": 0.2,
+    "cost_goal": 0.4
+  },
+  "2030": {
+    "coverage_goal": 0.75,
+    "emission_goal": 0.1,
+    "cost_goal": 0.5
+  },
+  "2050": {
+    "coverage_goal": 0.9,
+    "emission_goal": 0.0,
+    "cost_goal": 0.5
+  }
+}

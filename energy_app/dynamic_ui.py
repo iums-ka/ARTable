@@ -164,6 +164,15 @@ class UI:
     def get_place_selection_area(self):
         return self.place_selection_area
 
+    def get_2020_area(self):
+        return (2883,2461),(2883+129,2461+129)
+
+    def get_2030_area(self):
+        return (3723,2461),(3723+129,2461+129)
+
+    def get_2050_area(self):
+        return (4532,2461),(4532+129,2461+129)
+
 
 if __name__ == '__main__':
     ui = UI().render_default()
