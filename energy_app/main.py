@@ -7,7 +7,23 @@ from energy_app.dynamic_ui import UI
 from energy_app.dynamic_ui import find_bounds_for_name as find
 from queue import LifoQueue
 
-import paho.mqtt.client as mqtt
+import asyncio
+import websockets
+
+
+async def _send(text):
+    try:
+        uri = "ws://localhost:5500"
+        async with websockets.connect(uri) as websocket:
+            await websocket.send(text)
+            print("> " + text)
+    except Exception:
+        print("Failed to send: " + text)
+        pass
+
+
+def send(text):
+    asyncio.get_event_loop().run_until_complete(_send(text))
 
 
 class MapListener(ArucoAreaListener):
@@ -20,11 +36,10 @@ class MapListener(ArucoAreaListener):
         for plant in config["types"]:
             self.plants[plant["marker"]] = plant
 
-    def __init__(self, area, ids, ar, dynamic_ui, mqtt_client):
+    def __init__(self, area, ids, ar, dynamic_ui):
         super().__init__(area, ids)
         self.table = ar
         self.ui = dynamic_ui
-        self.client = mqtt_client
         self.energy = {}
         self.cost = {}
         self.emission = {}
@@ -33,20 +48,17 @@ class MapListener(ArucoAreaListener):
 
     def on_enter(self, marker_id, position):
         coords = self.table_pos_to_geocode(position)
-        self.client.publish("MARKER", "enter:" + self.plants[marker_id]["name"] + ":"
-                            + str(coords[0]) + ":" + str(coords[1]))
+        send("MARKER:enter:" + self.plants[marker_id]["name"] + ":" + str(coords[0]) + ":" + str(coords[1]))
         self.update_energy(marker_id, position)
 
     def on_move(self, marker_id, last_position, position):
         coords = self.table_pos_to_geocode(position)
-        self.client.publish("MARKER", "move:" + self.plants[marker_id]["name"] + ":"
-                            + str(coords[0]) + ":" + str(coords[1]))
+        send("MARKER:move:" + self.plants[marker_id]["name"] + ":" + str(coords[0]) + ":" + str(coords[1]))
         self.update_energy(marker_id, position)
 
     def on_leave(self, marker_id, last_position):
         coords = self.table_pos_to_geocode(last_position)
-        self.client.publish("MARKER", "leave:" + self.plants[marker_id]["name"] + ":"
-                            + str(coords[0]) + ":" + str(coords[1]))
+        send("MARKER:leave:" + self.plants[marker_id]["name"] + ":" + str(coords[0]) + ":" + str(coords[1]))
         for a_dict in (self.energy, self.cost, self.emission):
             if marker_id in a_dict:
                 a_dict.pop(marker_id)
@@ -64,7 +76,12 @@ class MapListener(ArucoAreaListener):
         if plant["type"] == "wind":
             energy = self.ui.get_wind(pos)
         if energy is not None:
-            self.energy[marker_id] = eval(plant["energy_formula"], {'datapoint': energy})
+            global place_energy, place_population
+            self.energy[marker_id] = eval(plant["energy_formula"], {
+                'datapoint': energy,
+                'needed': place_energy,
+                'population': place_population
+            })
             self.emission[marker_id] = plant["emission"]
             self.cost[marker_id] = plant["cost"]
             self.sum_and_update()
@@ -89,11 +106,10 @@ class PlaceListener(ArucoAreaListener):
         for place in config["places"]:
             self.places[place["marker"]] = place
 
-    def __init__(self, area, ids, ar, dynamic_ui, mqtt_client):
+    def __init__(self, area, ids, ar, dynamic_ui):
         super().__init__(area, ids)
         self.table = ar
         self.ui = dynamic_ui
-        self.client = mqtt_client
         self.keyboard_id = -1
         self.places = {}
         self.reload()
@@ -113,7 +129,7 @@ class PlaceListener(ArucoAreaListener):
         place = self.places[marker_id]
         ui.set_position(place["bounds"], zoom_in=0)
         place_name, place_population, place_energy = place["name"], place["population"], place["energy"]
-        self.client.publish("PLACE", place_name + ":" + str(place_population) + ":" + str(place_energy))
+        send("PLACE:" + place_name + ":" + str(place_population) + ":" + str(place_energy))
         queue.put(None)  # call for update
 
 
@@ -123,11 +139,10 @@ class YearListener(ArucoAreaListener):
         all_goals = config[str(self.year)]
         self.goals = (all_goals["coverage_goal"], all_goals["emission_goal"], all_goals["cost_goal"])
 
-    def __init__(self, area, ids, ar, dynamic_ui, mqtt_client, year):
+    def __init__(self, area, ids, ar, dynamic_ui, year):
         super().__init__(area, ids)
         self.table = ar
         self.ui = dynamic_ui
-        self.client = mqtt_client
         self.year = year
         self.goals = (0, 0, 0)
         self.reload()
@@ -169,16 +184,14 @@ def for_canonical(f):
 
 
 if __name__ == '__main__':
-    client = mqtt.Client("KATZE_Tisch")
-    client.connect("localhost")
-    client.loop_start()
-    client.publish("SYSTEM", "startup")
+    send("SYSTEM:startup")
 
     reload_hotkey = HotKey(HotKey.parse("<ctrl>+r"), reload_configs)
     keyboard_listener = Listener(
         on_press=for_canonical(reload_hotkey.press),
         on_release=for_canonical(reload_hotkey.release))
     keyboard_listener.start()
+    table = ARTable(Configuration("table.json"))
     ui = UI()
     place_name = "Karlsruhe"
     place_population = 313092
@@ -189,23 +202,21 @@ if __name__ == '__main__':
     additional_emission = 0
     additional_cost = 0
     coverage_goal, emission_goal, cost_goal = .7, .2, .4
-    table = ARTable(Configuration("table.json"))
     aruco = Aruco()
     table.add_plugin(aruco)
     update_table()
-    map_listener = MapListener(table.image_to_table_coords(ui.get_map_interaction_area()), (4, 10,), table, ui, client)
+    map_listener = MapListener(table.image_to_table_coords(ui.get_map_interaction_area()), (4, 10,), table, ui)
     aruco.add_listener(map_listener)
-    place_listener = PlaceListener(table.image_to_table_coords(ui.get_place_selection_area()), (4, 10,), table, ui,
-                                   client)
+    place_listener = PlaceListener(table.image_to_table_coords(ui.get_place_selection_area()), (4, 10,), table, ui)
     aruco.add_listener(place_listener)
-    year_2020_listener = YearListener(table.image_to_table_coords(ui.get_2020_area()), (4,), table, ui, client, 2020)
-    year_2030_listener = YearListener(table.image_to_table_coords(ui.get_2030_area()), (4,), table, ui, client, 2030)
-    year_2050_listener = YearListener(table.image_to_table_coords(ui.get_2050_area()), (4,), table, ui, client, 2050)
+    year_2020_listener = YearListener(table.image_to_table_coords(ui.get_2020_area()), (4,), table, ui, 2020)
+    year_2030_listener = YearListener(table.image_to_table_coords(ui.get_2030_area()), (4,), table, ui, 2030)
+    year_2050_listener = YearListener(table.image_to_table_coords(ui.get_2050_area()), (4,), table, ui, 2050)
     aruco.add_listener(year_2020_listener)
     aruco.add_listener(year_2030_listener)
     aruco.add_listener(year_2050_listener)
     table.start()
-    client.publish("SYSTEM", "running")
+    send("SYSTEM:running")
     queue = LifoQueue()
     while True:
         queue.get(block=True)
