@@ -15,6 +15,8 @@ from shapely.geometry import Point
 import geopandas
 from energy_app.geotiler_shelvecache import Cache
 
+import shelve
+
 default_target = "Karlsruhe"
 default_population = 313092
 default_energy_consumption = 9100
@@ -48,13 +50,29 @@ class UI:
         self.map_area = ((362, 173), (2784, 2606))
         self.place_selection_area = ((2615, 2446), (2743, 2574))
         print("Loading datasets...")
-        self.insolation = geopandas.read_file(
-            "resources/Globalstrahlung/Globalstrahlung (kWh_m²)_polygon.shp", encoding='utf-8'
-        ).to_crs(epsg=4326)
-        self.wind_potential = geopandas.read_file("resources/windatlas_flaechen_2019.json", encoding='utf-8')
-        self.wind_potential = self.wind_potential.replace(
-            {"<= 75": 75, "> 75 - 105": 105, "> 105 - 145": 145, "> 145 - 190": 190, "> 190 - 250": 250,
-             "> 250 - 310": 310, "> 310 - 375": 375, "> 375 - 515": 515, "> 515 - 660": 660, "> 660 - 1.600": 1000})
+        self.data_cache = shelve.open("data_cache", writeback=True)
+        if "sun" in self.data_cache.keys() and "wind" in self.data_cache.keys():
+            self.insolation = self.data_cache["sun"]
+            self.wind_potential = self.data_cache["wind"]
+            self.data_cache.close()
+        else:
+            print("No cache found!")
+            self.insolation = geopandas.read_file(
+                "resources/Globalstrahlung/Globalstrahlung (kWh_m²)_polygon.shp", encoding='utf-8'
+            ).to_crs(epsg=4326)
+            self.wind_potential = geopandas.read_file(
+                "resources/windatlas_flaechen_2019.json", encoding='utf-8'
+            ).to_crs(epsg=4326)
+            self.wind_potential = self.wind_potential.replace(
+                {"<= 75": 75, "> 75 - 105": 105, "> 105 - 145": 145, "> 145 - 190": 190, "> 190 - 250": 250,
+                 "> 250 - 310": 310, "> 310 - 375": 375, "> 375 - 515": 515, "> 515 - 660": 660, "> 660 - 1.600": 1000}
+            )
+            # does not help with the windows-sometimes-crash
+            # self.get_closest_row((0,0),self.insolation)
+            # self.get_closest_row((0,0),self.wind_potential)
+            self.data_cache["sun"] = self.insolation
+            self.data_cache["wind"] = self.wind_potential
+            self.data_cache.close()
         print("Done.")
         self.static_layer = Image.open('resources/static-layer.png')
         self.map_image = None
@@ -141,15 +159,19 @@ class UI:
         # points, values = data_provider.sample(
         #    (self.map_data.geocode((0, 0)), self.map_data.geocode(self.get_map_size())))
         # return griddata(points, values, map_coordinates, method='cubic')
+        result = self.get_closest_row(map_coordinates, dataframe)
+        return result[key] if result is not None else None
+
+    def get_closest_row(self, point, dataframe):
         epsilon = 0.1
-        x, y = map_coordinates
+        x, y = point
         spatial_index = dataframe.sindex
         filtered = dataframe.iloc[
             list(spatial_index.intersection((x - epsilon, y - epsilon, x + epsilon, y + epsilon)))
         ]
         if not len(filtered) == 0:
-            closest = filtered.distance(Point(map_coordinates)).idxmin()
-            return dataframe.iloc[closest][key]
+            closest = filtered.distance(Point(point)).idxmin()
+            return dataframe.iloc[closest]
         return None
 
     def get_map_area(self):
@@ -165,13 +187,14 @@ class UI:
         return self.place_selection_area
 
     def get_2020_area(self):
-        return (2883,2461),(2883+129,2461+129)
+        return (2883, 2461), (2883 + 129, 2461 + 129)
 
     def get_2030_area(self):
-        return (3723,2461),(3723+129,2461+129)
+        return (3723, 2461), (3723 + 129, 2461 + 129)
 
     def get_2050_area(self):
-        return (4532,2461),(4532+129,2461+129)
+        return (4532, 2461), (4532 + 129, 2461 + 129)
+
 
 
 if __name__ == '__main__':
