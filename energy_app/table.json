@@ -19,6 +19,8 @@
 		}
 	},
 	"camera": {
-		"index": 0
+		"index": 0,
+		"width": 1920,
+		"height": 1080
 	}
 }

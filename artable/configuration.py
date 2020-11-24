@@ -13,3 +13,4 @@ class Configuration:
             self.table_markers = table["marker"]
             self.projector_id = projector["screen"]
             self.camera_id = data["camera"]["index"]
+            self.camera_resolution = (data["camera"]["width"], data["camera"]["height"])

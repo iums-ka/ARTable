@@ -186,6 +186,8 @@ class ARTable:
 
     def __get_camera(self):
         vc = cv2.VideoCapture(self.config.camera_id)
+        vc.set(cv2.CAP_PROP_FRAME_WIDTH,self.config.camera_resolution[0])
+        vc.set(cv2.CAP_PROP_FRAME_HEIGHT,self.config.camera_resolution[1])
         if vc.isOpened():
             successful, frame = vc.read()  # try to get the first frame
             if not successful:
