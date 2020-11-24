@@ -126,7 +126,7 @@ class ARTable:
                 points = c.reshape(c.shape[0], 2)
                 points = list(zip(ids, points))
                 points = sorted(filter(lambda x: (x[0] in marker_ids), points))
-                points = np.array(points)
+                points = np.array(points, dtype=object)
 
                 if len(points) > 3:
                     points = points[:, 1]
