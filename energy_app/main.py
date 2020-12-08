@@ -1,14 +1,17 @@
 import json
+
+import pynput
 from pynput.keyboard import HotKey, Listener
 
 from artable.plugins import Aruco, ArucoAreaListener
 from artable import ARTable, Configuration
 from energy_app.dynamic_ui import UI
-from energy_app.dynamic_ui import find_bounds_for_name as find
 from queue import LifoQueue
 
 import asyncio
 import websockets
+
+from energy_app.place_provider import PlaceProvider
 
 
 async def _send(text):
@@ -23,7 +26,7 @@ async def _send(text):
 
 
 def send(text):
-    asyncio.get_event_loop().run_until_complete(_send(text))
+    asyncio.new_event_loop().run_until_complete(_send(text))
 
 
 class MapListener(ArucoAreaListener):
@@ -117,12 +120,17 @@ class PlaceListener(ArucoAreaListener):
     def on_enter(self, marker_id, position):
         if marker_id != self.keyboard_id:
             self.set_place(marker_id)
+        else:
+            global typing
+            typing = True
 
     def on_move(self, marker_id, last_position, position):
         pass
 
     def on_leave(self, marker_id, last_position):
-        pass
+        if marker_id == self.keyboard_id:
+            global typing
+            typing = False
 
     def set_place(self, marker_id):
         global place_name, place_population, place_energy
@@ -131,6 +139,44 @@ class PlaceListener(ArucoAreaListener):
         place_name, place_population, place_energy = place["name"], place["population"], place["energy"]
         send("PLACE:" + place_name + ":" + str(place_population) + ":" + str(place_energy))
         queue.put(None)  # call for update
+
+
+def key_input(key):
+    global search, selected, results
+    if typing:
+        if str(key).replace("'", "") in "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-äöüÄÖÜß":
+            search += str(key).replace("'", "")
+            queue.put(None)
+        if key == pynput.keyboard.Key.space:
+            search += " "
+            queue.put(None)
+        if key == pynput.keyboard.Key.backspace:
+            search = search[:-1]
+            if len(search) == 0:
+                results = []
+                selected = -1
+            queue.put(None)
+        if len(search) > 0:
+            results = place_provider.list_all_containing(search)
+            selected = min(len(results) - 1, selected)
+            if key == pynput.keyboard.Key.enter:
+                if selected != -1:
+                    place = place_provider.get(results[selected])
+                    ui.set_position(place["bounds"], zoom_in=1)
+                    global place_name, place_population, place_energy
+                    place_name, place_population, place_energy = place["name"], place["population"], place["energy"]
+                    send("PLACE:" + place_name + ":" + str(place_population) + ":" + str(place_energy))
+                    results = []
+                    search = ""
+                    selected = -1
+                    queue.put(None)
+            if key == pynput.keyboard.Key.up:
+                selected = (selected + 1) % len(results)
+                queue.put(None)
+            if key == pynput.keyboard.Key.down:
+                selected = (selected + len(results) - 1) % len(results)
+                queue.put(None)
+
 
 
 class YearListener(ArucoAreaListener):
@@ -164,9 +210,10 @@ def update_table():
     base_energy = place_energy / 2
     base_emission = 0.5
     base_cost = 0.5
+    search_data = (search, selected, results) if typing else None
     image = ui.render(place_name, place_population, place_energy, (base_energy + additional_energy) / place_energy,
                       (base_emission + additional_emission), (base_cost + additional_cost),
-                      coverage_goal, emission_goal, cost_goal)
+                      coverage_goal, emission_goal, cost_goal, search_data)
     table.display(image)
 
 
@@ -176,6 +223,7 @@ def reload_configs():
     year_2020_listener.reload()
     year_2030_listener.reload()
     year_2050_listener.reload()
+    place_provider.reload()
     print("Reloaded.")
 
 
@@ -185,18 +233,25 @@ def for_canonical(f):
 
 if __name__ == '__main__':
     send("SYSTEM:startup")
-
+    typing = False
+    search = ""
+    selected = -1
+    results = []
     reload_hotkey = HotKey(HotKey.parse("<ctrl>+r"), reload_configs)
-    keyboard_listener = Listener(
+    reload_listener = Listener(
         on_press=for_canonical(reload_hotkey.press),
         on_release=for_canonical(reload_hotkey.release))
+    keyboard_listener = Listener(on_press=key_input)
+    reload_listener.start()
     keyboard_listener.start()
     table = ARTable(Configuration("table.json"))
     ui = UI()
-    place_name = "Karlsruhe"
-    place_population = 313092
-    place_energy = 9100
-    bounds = find(place_name)
+    place_name = "Stadtkreis Karlsruhe"
+    place_provider = PlaceProvider()
+    place_data = place_provider.get(place_name)
+    place_population = place_data["population"]
+    place_energy = place_data["energy"]
+    bounds = place_data["bounds"]
     ui.set_position(bounds)
     additional_energy = 0
     additional_emission = 0
@@ -205,10 +260,13 @@ if __name__ == '__main__':
     aruco = Aruco()
     table.add_plugin(aruco)
     update_table()
+    # todo read ids from config
     map_listener = MapListener(table.image_to_table_coords(ui.get_map_interaction_area()), (4, 10,), table, ui)
     aruco.add_listener(map_listener)
+    # todo read ids from config
     place_listener = PlaceListener(table.image_to_table_coords(ui.get_place_selection_area()), (4, 10,), table, ui)
     aruco.add_listener(place_listener)
+    # todo read ids from config
     year_2020_listener = YearListener(table.image_to_table_coords(ui.get_2020_area()), (4,), table, ui, 2020)
     year_2030_listener = YearListener(table.image_to_table_coords(ui.get_2030_area()), (4,), table, ui, 2030)
     year_2050_listener = YearListener(table.image_to_table_coords(ui.get_2050_area()), (4,), table, ui, 2050)
@@ -216,8 +274,8 @@ if __name__ == '__main__':
     aruco.add_listener(year_2030_listener)
     aruco.add_listener(year_2050_listener)
     table.start()
-    send("SYSTEM:running")
     queue = LifoQueue()
+    send("SYSTEM:running")
     while True:
         queue.get(block=True)
         update_table()

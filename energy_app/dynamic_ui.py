@@ -1,13 +1,10 @@
 from functools import partial
-from time import time
 
 import geotiler
 from geotiler.tile.io import fetch_tiles
 from PIL import Image, ImageDraw, ImageFont  # todo: switch to cv2 for performance
-from xml.etree.ElementTree import parse
 from geotiler.cache import caching_downloader
 import matplotlib.pyplot as plt
-from scipy.interpolate import griddata
 from shapely.geometry import Point
 # install GDAL and Fiona first. Their wheels must be downloaded manually for Windows.
 # rtree, which must be downloaded manually is also needed.
@@ -17,7 +14,8 @@ from energy_app.geotiler_shelvecache import Cache
 
 import shelve
 
-default_target = "Karlsruhe"
+default_name = "Karlsruhe"
+default_bounds = [8.277349, 48.94036, 8.541143, 49.091529]
 default_population = 313092
 default_energy_consumption = 9100
 default_coverage = 1
@@ -26,21 +24,6 @@ default_cost = .75
 default_coverage_goal = .97
 default_emission_goal = .45
 default_cost_goal = .55
-
-
-def find_bounds_for_name(target):
-    # areas: http://overpass-api.de/api/interpreter?data=area(3600062611);rel["boundary"="administrative"](area);out tags center bb;
-    areas = parse('resources/areas_bw.osm').getroot()
-    parent_map = {c: p for p in areas.iter() for c in p}
-    target_bounds = None
-    for area in areas.iter('tag'):
-        if area.attrib['k'] == 'name' and area.attrib['v'] == target:
-            bb = parent_map[area].find('bounds').attrib
-            target_bounds = (bb['minlon'], bb['minlat'], bb['maxlon'], bb['maxlat'])
-            break
-    if target_bounds is None:
-        print("%s not found!" % target)
-    return tuple(float(s) for s in target_bounds)
 
 
 class UI:
@@ -76,23 +59,27 @@ class UI:
         print("Done.")
         self.static_layer = Image.open('resources/static-layer.png')
         self.map_image = None
+        self.map_requires_rerender = True
 
     def set_position(self, target_bounds, zoom_in=2):
         # hint: lon, lat instead of lat, lon
         self.map_data = geotiler.Map(extent=target_bounds, size=self.get_map_size())
         self.map_data.zoom += zoom_in
-        cache = Cache("tiles_cache")
-        downloader = partial(caching_downloader, cache.get, cache.set, fetch_tiles)
-        self.map_image = geotiler.render_map(self.map_data, downloader=downloader)
-        cache.close()
+        self.map_requires_rerender = True
 
     def render(self, place,
                population, energy_consumption,
                coverage, emission, cost,
-               coverage_goal, emission_goal, cost_goal):
+               coverage_goal, emission_goal, cost_goal, search_data=None):
         # black background
         screen = Image.new('RGBA', (4902, 2756), color='black')
         # map (2423 x 2435 at 362, 172)
+        if self.map_requires_rerender:
+            cache = Cache("tiles_cache")
+            downloader = partial(caching_downloader, cache.get, cache.set, fetch_tiles)
+            self.map_image = geotiler.render_map(self.map_data, downloader=downloader)
+            cache.close()
+            self.map_requires_rerender = False
         screen.paste(self.map_image, self.get_map_area()[0])
         # bars (1735 x 92 at 2887,814; 2887,1123; 2887,1429) rgb(248, 215, 61)
         bar_w = 1735
@@ -119,7 +106,7 @@ class UI:
         import locale
         locale.setlocale(locale.LC_ALL, '')
         draw_screen.text((text_x, text_2), "{:n} Menschen".format(int(population)), 'white', font)
-        draw_screen.text((text_x, text_3), "{:n} GWh".format(energy_consumption), 'white', font)
+        draw_screen.text((text_x, text_3), "{:n} MWh".format(int(energy_consumption)), 'white', font)
         # lines (12 x 178) rgb(153,153,153)
         line_w = 12
         line_h = 178
@@ -135,10 +122,22 @@ class UI:
                               (153, 153, 153))
         draw_screen.rectangle((line_3_x - line_w / 2, line_3_y, line_3_x + line_w / 2, line_3_y + line_h),
                               (153, 153, 153))
+        if search_data is not None:
+            print(search_data)
+            font = ImageFont.truetype('MyriadPro-Regular.otf', 42)
+            draw_screen.text((2192, 2480), search_data[0], 'black', font)
+            draw_screen.rectangle((2174, 2450, 2174 + 564, 2450 - len(search_data[2]) * 54), (255, 255, 255))
+            if search_data[1] != -1:
+                draw_screen.rectangle((2174, 2450 - search_data[1] * 54, 2174 + 564, 2450 - search_data[1] * 54 - 54),
+                                      (100, 100, 255))
+            for i in range(len(search_data[2])):
+                draw_screen.text((2192, 2410 - i * 54), search_data[2][i], 'black', font)
+
         return screen
 
     def render_default(self):
-        return self.render(find_bounds_for_name(default_target),
+        self.set_position(default_bounds)
+        return self.render(default_name,
                            default_population, default_energy_consumption,
                            default_coverage, default_emission, default_cost,
                            default_coverage_goal, default_emission_goal, default_cost_goal)
@@ -194,7 +193,6 @@ class UI:
 
     def get_2050_area(self):
         return (4532, 2461), (4532 + 129, 2461 + 129)
-
 
 
 if __name__ == '__main__':

@@ -1,6 +1,7 @@
 {
-  "keyboard": -1,
-  "places": [
+  "keyboard": 4,
+  "places" : [],
+  "places_disabled": [
     {
       "name": "Karlsruhe",
       "bounds": [
