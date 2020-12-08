@@ -13,6 +13,8 @@ import websockets
 
 from energy_app.place_provider import PlaceProvider
 
+sending_enabled = False
+
 
 async def _send(text):
     try:
@@ -26,7 +28,10 @@ async def _send(text):
 
 
 def send(text):
-    asyncio.new_event_loop().run_until_complete(_send(text))
+    if sending_enabled:
+        asyncio.new_event_loop().run_until_complete(_send(text))
+    else:
+        print(text)
 
 
 class MapListener(ArucoAreaListener):
@@ -176,7 +181,6 @@ def key_input(key):
             if key == pynput.keyboard.Key.down:
                 selected = (selected + len(results) - 1) % len(results)
                 queue.put(None)
-
 
 
 class YearListener(ArucoAreaListener):
