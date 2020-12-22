@@ -86,23 +86,33 @@ class MapListener(ArucoAreaListener):
         if energy is not None:
             global place_energy, place_population
             self.energy[marker_id] = eval(plant["energy_formula"], {
-                'datapoint': energy,
+                'potential': energy,
                 'needed': place_energy,
                 'population': place_population
             })
-            self.emission[marker_id] = plant["emission"]
-            self.cost[marker_id] = plant["cost"]
+            self.emission[marker_id] = eval(plant["emission_formula"], {
+                'potential': energy,
+                'needed': place_energy,
+                'population': place_population,
+                'power': self.energy[marker_id]
+            })
+            self.cost[marker_id] = eval(plant["cost_formula"], {
+                'potential': energy,
+                'needed': place_energy,
+                'population': place_population,
+                'power': self.energy[marker_id]
+            })
             self.sum_and_update()
 
     def sum_and_update(self):
-        global additional_energy, additional_emission, additional_cost
-        additional_energy = 0
-        additional_emission = 0
-        additional_cost = 0
+        global created_energy, created_emission, created_cost
+        created_energy = 0
+        created_emission = 0
+        created_cost = 0
         for energy, emission, cost in zip(self.energy.values(), self.emission.values(), self.cost.values()):
-            additional_energy = additional_energy + energy
-            additional_emission = additional_emission + emission
-            additional_cost = additional_cost + cost
+            created_energy = created_energy + energy
+            created_emission = created_emission + emission
+            created_cost = created_cost + cost
         queue.put(None)  # call for update
 
 
@@ -210,13 +220,9 @@ class YearListener(ArucoAreaListener):
 
 
 def update_table():
-    # print("Coverage: {:3f}".format(.5 + additional_energy))
-    base_energy = place_energy / 2
-    base_emission = 0.5
-    base_cost = 0.5
     search_data = (search, selected, results) if typing else None
-    image = ui.render(place_name, place_population, place_energy, (base_energy + additional_energy) / place_energy,
-                      (base_emission + additional_emission), (base_cost + additional_cost),
+    image = ui.render(place_name, place_population, place_energy, created_energy / place_energy,
+                      created_emission / place_population, created_cost / place_population,
                       coverage_goal, emission_goal, cost_goal, search_data)
     table.display(image)
 
@@ -257,9 +263,9 @@ if __name__ == '__main__':
     place_energy = place_data["energy"]
     bounds = place_data["bounds"]
     ui.set_position(bounds)
-    additional_energy = 0
-    additional_emission = 0
-    additional_cost = 0
+    created_energy = 0
+    created_emission = 0
+    created_cost = 0
     coverage_goal, emission_goal, cost_goal = .7, .2, .4
     aruco = Aruco()
     table.add_plugin(aruco)

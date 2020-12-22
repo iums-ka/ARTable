@@ -3,17 +3,17 @@
     {
       "name": "Windpark",
       "type": "wind",
-      "energy_formula": "datapoint*10",
-      "cost": 0.2,
-      "emission": -0.25,
+      "energy_formula": "needed*potential/5000",
+      "cost_formula": "power/1000*0.0638*population/150",
+      "emission_formula": "power/1000*0.012*population/150",
       "marker": 10
     },
     {
       "name": "Solarpark",
       "type": "solar",
-      "energy_formula": "(datapoint-1093)*800",
-      "cost": -0.3,
-      "emission": -0.1,
+      "energy_formula": "needed*(potential-1093)/50",
+      "cost_formula": "power/1000*0.0824*population/150",
+      "emission_formula": "power/1000*0.0485*population/150",
       "marker": 4
     }
   ]
