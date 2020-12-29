@@ -41,11 +41,14 @@ class MapListener(ArucoAreaListener):
         self.emission = {}
         config = json.load(open("plant_types.json", mode="r", encoding="utf-8"))
         self.plants = {}
+        ids = []
         for plant in config["types"]:
+            ids.append(plant["marker"])
             self.plants[plant["marker"]] = plant
+        self.set_ids(ids)
 
-    def __init__(self, area, ids, ar, dynamic_ui):
-        super().__init__(area, ids)
+    def __init__(self, area, ar, dynamic_ui):
+        super().__init__(area)
         self.table = ar
         self.ui = dynamic_ui
         self.energy = {}
@@ -121,11 +124,14 @@ class PlaceListener(ArucoAreaListener):
         config = json.load(open("shortcut_places.json", mode="r", encoding="utf-8"))
         self.keyboard_id = config["keyboard"]
         self.places = {}
+        ids = []
         for place in config["places"]:
+            ids.append(place["marker"])
             self.places[place["marker"]] = place
+        self.set_ids(ids)
 
-    def __init__(self, area, ids, ar, dynamic_ui):
-        super().__init__(area, ids)
+    def __init__(self, area, ar, dynamic_ui):
+        super().__init__(area)
         self.table = ar
         self.ui = dynamic_ui
         self.keyboard_id = -1
@@ -198,9 +204,10 @@ class YearListener(ArucoAreaListener):
         config = json.load(open("years.json", mode="r", encoding="utf-8"))
         all_goals = config[str(self.year)]
         self.goals = (all_goals["coverage_goal"], all_goals["emission_goal"], all_goals["cost_goal"])
+        self.set_ids([config["marker"]])
 
-    def __init__(self, area, ids, ar, dynamic_ui, year):
-        super().__init__(area, ids)
+    def __init__(self, area, ar, dynamic_ui, year):
+        super().__init__(area)
         self.table = ar
         self.ui = dynamic_ui
         self.year = year
@@ -270,16 +277,13 @@ if __name__ == '__main__':
     aruco = Aruco()
     table.add_plugin(aruco)
     update_table()
-    # todo read ids from config
-    map_listener = MapListener(table.image_to_table_coords(ui.get_map_interaction_area()), (4, 10,), table, ui)
+    map_listener = MapListener(table.image_to_table_coords(ui.get_map_interaction_area()), table, ui)
     aruco.add_listener(map_listener)
-    # todo read ids from config
-    place_listener = PlaceListener(table.image_to_table_coords(ui.get_place_selection_area()), (4, 10,), table, ui)
+    place_listener = PlaceListener(table.image_to_table_coords(ui.get_place_selection_area()), table, ui)
     aruco.add_listener(place_listener)
-    # todo read ids from config
-    year_2020_listener = YearListener(table.image_to_table_coords(ui.get_2020_area()), (4,), table, ui, 2020)
-    year_2030_listener = YearListener(table.image_to_table_coords(ui.get_2030_area()), (4,), table, ui, 2030)
-    year_2050_listener = YearListener(table.image_to_table_coords(ui.get_2050_area()), (4,), table, ui, 2050)
+    year_2020_listener = YearListener(table.image_to_table_coords(ui.get_2020_area()), table, ui, 2020)
+    year_2030_listener = YearListener(table.image_to_table_coords(ui.get_2030_area()), table, ui, 2030)
+    year_2050_listener = YearListener(table.image_to_table_coords(ui.get_2050_area()), table, ui, 2050)
     aruco.add_listener(year_2020_listener)
     aruco.add_listener(year_2030_listener)
     aruco.add_listener(year_2050_listener)

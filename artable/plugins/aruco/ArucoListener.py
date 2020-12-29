@@ -15,12 +15,15 @@ def distance_sqr(p1, p2):
 
 
 class AreaListener(ListenerBase, ABC):
-    def __init__(self, area, ids, delta=5, time_threshold=2):
+    def __init__(self, area, ids=(), delta=5, time_threshold=2):
         self.area = np.array(area).flatten()  # x1, y1, x2, y2
         self.ids = ids
         self.delta_sqr = delta ** 2
         self.last_positions = {}
         self.time_threshold = time_threshold
+
+    def set_ids(self, ids):
+        self.ids = ids
 
     def __inbounds(self, position):
         return (self.area[0] <= position[0] <= self.area[2]) and \

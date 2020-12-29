@@ -1,30 +1,4 @@
 {
-  "keyboard": 4,
-  "places" : [],
-  "places_disabled": [
-    {
-      "name": "Karlsruhe",
-      "bounds": [
-        8.3407,
-        48.9862,
-        8.4708,
-        49.0396
-      ],
-      "population": 313092,
-      "energy": 9100,
-      "marker": 4
-    },
-    {
-      "name": "Baden-Württemberg",
-      "bounds": [
-        7.745,
-        47.582,
-        10.289,
-        49.612
-      ],
-      "population": 11069533,
-      "energy": 6311750,
-      "marker": 10
-    }
-  ]
+  "keyboard": -1,
+  "places" : []
 }
