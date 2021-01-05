@@ -36,9 +36,6 @@ def send(text):
 
 class MapListener(ArucoAreaListener):
     def reload(self):
-        self.energy = {}
-        self.cost = {}
-        self.emission = {}
         config = json.load(open("plant_types.json", mode="r", encoding="utf-8"))
         self.plants = {}
         ids = []
@@ -51,72 +48,72 @@ class MapListener(ArucoAreaListener):
         super().__init__(area)
         self.table = ar
         self.ui = dynamic_ui
-        self.energy = {}
-        self.cost = {}
-        self.emission = {}
         self.plants = {}
+        self.active_plants = {}
         self.reload()
 
     def on_enter(self, marker_id, position):
         coords = self.table_pos_to_geocode(position)
         send("MARKER:enter:" + self.plants[marker_id]["name"] + ":" + str(coords[0]) + ":" + str(coords[1]))
-        self.update_energy(marker_id, position)
+        self.active_plants[marker_id] = self.table.table_to_image_coords(position)
+        self.sum_and_update()
 
     def on_move(self, marker_id, last_position, position):
         coords = self.table_pos_to_geocode(position)
         send("MARKER:move:" + self.plants[marker_id]["name"] + ":" + str(coords[0]) + ":" + str(coords[1]))
-        self.update_energy(marker_id, position)
+        self.active_plants[marker_id] = self.table.table_to_image_coords(position)
+        self.sum_and_update()
 
     def on_leave(self, marker_id, last_position):
         coords = self.table_pos_to_geocode(last_position)
         send("MARKER:leave:" + self.plants[marker_id]["name"] + ":" + str(coords[0]) + ":" + str(coords[1]))
-        for a_dict in (self.energy, self.cost, self.emission):
-            if marker_id in a_dict:
-                a_dict.pop(marker_id)
+        self.active_plants.pop(marker_id)
         self.sum_and_update()
 
     def table_pos_to_geocode(self, position):
         return self.ui.image_coordinates_to_geocode(self.table.table_to_image_coords(position))
 
-    def update_energy(self, marker_id, position):
-        plant = self.plants[marker_id]
-        pos = self.table.table_to_image_coords(position)
-        energy = 0
-        if plant["type"] == "solar":
-            energy = self.ui.get_insolation(pos)
-        if plant["type"] == "wind":
-            energy = self.ui.get_wind(pos)
-        if energy is not None:
-            global place_energy, place_population
-            self.energy[marker_id] = eval(plant["energy_formula"], {
-                'potential': energy,
-                'needed': place_energy,
-                'population': place_population
-            })
-            self.emission[marker_id] = eval(plant["emission_formula"], {
-                'potential': energy,
-                'needed': place_energy,
-                'population': place_population,
-                'power': self.energy[marker_id]
-            })
-            self.cost[marker_id] = eval(plant["cost_formula"], {
-                'potential': energy,
-                'needed': place_energy,
-                'population': place_population,
-                'power': self.energy[marker_id]
-            })
-            self.sum_and_update()
-
     def sum_and_update(self):
-        global created_energy, created_emission, created_cost
+        global created_energy, created_emission, created_cost, place_energy, place_population
         created_energy = 0
         created_emission = 0
         created_cost = 0
-        for energy, emission, cost in zip(self.energy.values(), self.emission.values(), self.cost.values()):
-            created_energy = created_energy + energy
-            created_emission = created_emission + emission
-            created_cost = created_cost + cost
+        for current_plant_type in ("water", "wind", "solar", "gas", "coal", "atom"):  # prioritization
+            for marker_id in self.active_plants.keys():
+                plant = self.plants[marker_id]
+                if plant["type"] != current_plant_type:
+                    continue
+                potential = self.get_potential(plant["type"], self.active_plants[marker_id])
+                plant_possible_energy = eval(plant["energy_formula"], {
+                    'potential': potential,
+                    'needed': place_energy,
+                    'population': place_population
+                })
+                plant_energy = plant_possible_energy + min(place_energy - (created_energy + plant_possible_energy),0)
+                plant_emission = eval(plant["emission_formula"], {
+                    'potential': potential,
+                    'needed': place_energy,
+                    'population': place_population,
+                    'power': plant_energy
+                })
+                plant_cost = eval(plant["cost_formula"], {
+                    'potential': potential,
+                    'needed': place_energy,
+                    'population': place_population,
+                    'power': plant_energy
+                })
+                created_energy += plant_energy
+                created_emission += plant_emission
+                created_cost += plant_cost
         queue.put(None)  # call for update
+
+    def get_potential(self, plant_type, position):
+        energy = 0
+        if plant_type == "solar":
+            energy = self.ui.get_insolation(position)
+        elif plant_type == "wind":
+            energy = self.ui.get_wind(position)
+        return energy
 
 
 class PlaceListener(ArucoAreaListener):
