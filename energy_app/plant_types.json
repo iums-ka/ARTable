@@ -15,6 +15,14 @@
       "cost_formula": "power/1000*0.0824*population/150",
       "emission_formula": "power/1000*0.0485",
       "marker": 4
+    },
+    {
+      "name": "Kohlekraftwerk",
+      "type": "coal",
+      "energy_formula": "needed*0.9",
+      "cost_formula": "power*1000*0.27185*population/500000000",
+      "emission_formula": "power*1.020",
+      "marker": 10
     }
   ]
 }
