@@ -124,7 +124,7 @@ class PlaceListener(ArucoAreaListener):
         config = json.load(open("shortcut_places.json", mode="r", encoding="utf-8"))
         self.keyboard_id = config["keyboard"]
         self.places = {}
-        ids = []
+        ids = [self.keyboard_id]
         for place in config["places"]:
             ids.append(place["marker"])
             self.places[place["marker"]] = place
