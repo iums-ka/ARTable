@@ -110,18 +110,21 @@ class UI:
         # lines (12 x 178) rgb(153,153,153)
         line_w = 12
         line_h = 178
-        line_1_y = bar_1 - (line_h - bar_h) / 2
-        line_1_x = bar_x + bar_w * coverage_goal
-        line_2_y = bar_2 - (line_h - bar_h) / 2
-        line_2_x = bar_x + bar_w * emission_goal
-        line_3_y = bar_3 - (line_h - bar_h) / 2
-        line_3_x = bar_x + bar_w * cost_goal
-        draw_screen.rectangle((line_1_x - line_w / 2, line_1_y, line_1_x + line_w / 2, line_1_y + line_h),
+        if coverage_goal >= 0:
+            line_1_y = bar_1 - (line_h - bar_h) / 2
+            line_1_x = bar_x + bar_w * coverage_goal
+            draw_screen.rectangle((line_1_x - line_w / 2, line_1_y, line_1_x + line_w / 2, line_1_y + line_h),
+                                  (153, 153, 153))
+        if emission_goal >= 0:
+            line_2_y = bar_2 - (line_h - bar_h) / 2
+            line_2_x = bar_x + bar_w * emission_goal
+            draw_screen.rectangle((line_2_x - line_w / 2, line_2_y, line_2_x + line_w / 2, line_2_y + line_h),
                               (153, 153, 153))
-        draw_screen.rectangle((line_2_x - line_w / 2, line_2_y, line_2_x + line_w / 2, line_2_y + line_h),
-                              (153, 153, 153))
-        draw_screen.rectangle((line_3_x - line_w / 2, line_3_y, line_3_x + line_w / 2, line_3_y + line_h),
-                              (153, 153, 153))
+        if cost_goal >= 0:
+            line_3_y = bar_3 - (line_h - bar_h) / 2
+            line_3_x = bar_x + bar_w * cost_goal
+            draw_screen.rectangle((line_3_x - line_w / 2, line_3_y, line_3_x + line_w / 2, line_3_y + line_h),
+                                  (153, 153, 153))
         if search_data is not None:
             print(search_data)
             font = ImageFont.truetype('MyriadPro-Regular.otf', 42)

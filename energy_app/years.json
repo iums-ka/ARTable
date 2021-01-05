@@ -1,18 +1,18 @@
 {
   "marker": "4",
   "2020": {
-    "coverage_goal": 0.7,
-    "emission_goal": 0.2,
-    "cost_goal": 0.4
+    "coverage_goal": -1,
+    "emission_goal": 0.968,
+    "cost_goal": -1
   },
   "2030": {
-    "coverage_goal": 0.75,
-    "emission_goal": 0.1,
-    "cost_goal": 0.5
+    "coverage_goal": -1,
+    "emission_goal": 0.725,
+    "cost_goal": -1
   },
   "2050": {
-    "coverage_goal": 0.9,
-    "emission_goal": 0.0,
-    "cost_goal": 0.5
+    "coverage_goal": -1,
+    "emission_goal": 0.081,
+    "cost_goal": -1
   }
 }
