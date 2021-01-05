@@ -154,11 +154,9 @@ class PlaceListener(ArucoAreaListener):
             typing = False
 
     def set_place(self, marker_id):
-        global place_name, place_population, place_energy
         place = self.places[marker_id]
         ui.set_position(place["bounds"], zoom_in=0)
-        place_name, place_population, place_energy = place["name"], place["population"], place["energy"]
-        send("PLACE:" + place_name + ":" + str(place_population) + ":" + str(place_energy))
+        set_place(place)
         queue.put(None)  # call for update
 
 
@@ -184,9 +182,7 @@ def key_input(key):
                 if selected != -1:
                     place = place_provider.get(results[selected])
                     ui.set_position(place["bounds"], zoom_in=1)
-                    global place_name, place_population, place_energy
-                    place_name, place_population, place_energy = place["name"], place["population"], place["energy"]
-                    send("PLACE:" + place_name + ":" + str(place_population) + ":" + str(place_energy))
+                    set_place(place)
                     results = []
                     search = ""
                     selected = -1
@@ -197,6 +193,13 @@ def key_input(key):
             if key == pynput.keyboard.Key.down:
                 selected = (selected + len(results) - 1) % len(results)
                 queue.put(None)
+
+
+def set_place(place):
+    global place_name, place_population, place_energy, place_emission
+    place_name, place_population, place_energy, place_emission = \
+        place["name"], place["population"], place["energy"], place["emissions"]
+    send("PLACE:" + place_name + ":" + str(place_population) + ":" + str(place_energy) + ":" + str(place_emission))
 
 
 class YearListener(ArucoAreaListener):
@@ -229,7 +232,7 @@ class YearListener(ArucoAreaListener):
 def update_table():
     search_data = (search, selected, results) if typing else None
     image = ui.render(place_name, place_population, place_energy, created_energy / place_energy,
-                      created_emission / place_population, created_cost / place_population,
+                      created_emission / place_emission, created_cost / place_population,
                       coverage_goal, emission_goal, cost_goal, search_data)
     table.display(image)
 
@@ -267,6 +270,7 @@ if __name__ == '__main__':
     place_provider = PlaceProvider()
     place_data = place_provider.get(place_name)
     place_population = place_data["population"]
+    place_emission = place_data["emissions"]
     place_energy = place_data["energy"]
     bounds = place_data["bounds"]
     ui.set_position(bounds)

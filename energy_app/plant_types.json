@@ -5,7 +5,7 @@
       "type": "wind",
       "energy_formula": "needed*potential/5000",
       "cost_formula": "power/1000*0.0638*population/150",
-      "emission_formula": "power/1000*0.012*population/150",
+      "emission_formula": "power/1000*0.012",
       "marker": 10
     },
     {
@@ -13,7 +13,7 @@
       "type": "solar",
       "energy_formula": "needed*(potential-1093)/50",
       "cost_formula": "power/1000*0.0824*population/150",
-      "emission_formula": "power/1000*0.0485*population/150",
+      "emission_formula": "power/1000*0.0485",
       "marker": 4
     }
   ]
