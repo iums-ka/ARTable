@@ -6,7 +6,7 @@
       "energy_formula": "needed*0.9",
       "cost_formula": "power*1000*0.0638*population/500000000",
       "emission_formula": "power*0.012",
-      "marker": -1
+      "marker": 11
     },
     {
       "name": "Solarpark",
@@ -14,7 +14,7 @@
       "energy_formula": "needed*0.9",
       "cost_formula": "power*1000*0.0824*population/500000000",
       "emission_formula": "power*0.0485",
-      "marker": 4
+      "marker": 10
     },
     {
       "name": "Kohlekraftwerk",
@@ -22,7 +22,15 @@
       "energy_formula": "needed*0.9",
       "cost_formula": "power*1000*0.27185*population/500000000",
       "emission_formula": "power*1.020",
-      "marker": 10
+      "marker": 14
+    },
+    {
+      "name": "Atomkraftwerk",
+      "type": "atom",
+      "energy_formula": "needed*0.9",
+      "cost_formula": "power*1000*0.35*population/500000000",
+      "emission_formula": "power*0.066",
+      "marker": 15
     }
   ]
 }
