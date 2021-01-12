@@ -36,9 +36,10 @@ class UI:
         self.place_selection_area = ((2615, 2446), (2743, 2574))
         print("Loading datasets...")
         self.data_cache = shelve.open("data_cache", writeback=True)
-        if "sun" in self.data_cache.keys() and "wind" in self.data_cache.keys():
+        if "sun" in self.data_cache.keys() and "wind" in self.data_cache.keys() and "water" in self.data_cache.keys():
             self.insolation = self.data_cache["sun"]
             self.wind_potential = self.data_cache["wind"]
+            self.water_potential = self.data_cache["water"]
             self.data_cache.close()
         else:
             print("No cache found!")
@@ -52,11 +53,15 @@ class UI:
                 {"<= 75": 75, "> 75 - 105": 105, "> 105 - 145": 145, "> 145 - 190": 190, "> 190 - 250": 250,
                  "> 250 - 310": 310, "> 310 - 375": 375, "> 375 - 515": 515, "> 515 - 660": 660, "> 660 - 1.600": 1000}
             )
+            self.water_potential = geopandas.read_file(
+                "resources/Wasserkraftpotenzial/ermitteltes_wasserkraftpotenzial__abfrage_.shp", encoding='utf-8'
+            ).to_crs(epsg=4326)
             # does not help with the windows-sometimes-crash
             # self.get_closest_row((0,0),self.insolation)
             # self.get_closest_row((0,0),self.wind_potential)
             self.data_cache["sun"] = self.insolation
             self.data_cache["wind"] = self.wind_potential
+            self.data_cache["water"] = self.water_potential
             self.data_cache.close()
         print("Done.")
         self.static_layer = Image.open('resources/static-layer.png')
@@ -69,7 +74,8 @@ class UI:
         self.map_data.zoom += zoom_in
         self.map_data_shading = geotiler.Map(extent=target_bounds, size=self.get_map_size())
         self.map_data_shading.zoom += zoom_in
-        self.map_data_shading.provider = geotiler.provider.MapProvider(json.load(open("resources/hillshade.json", encoding='utf8', mode="r")))
+        self.map_data_shading.provider = geotiler.provider.MapProvider(
+            json.load(open("resources/hillshade.json", encoding='utf8', mode="r")))
         self.map_requires_rerender = True
 
     def render(self, place,
@@ -86,6 +92,7 @@ class UI:
             map_shading = geotiler.render_map(self.map_data_shading, downloader=downloader)
             cache.close()
             self.map_image.alpha_composite(map_shading)
+            self.map_image = self.apply_water_overlay(self.map_image)
             self.map_requires_rerender = False
         screen.paste(self.map_image, self.get_map_area()[0])
         # bars (1735 x 92 at 2887,814; 2887,1123; 2887,1429) rgb(248, 215, 61)
@@ -126,7 +133,7 @@ class UI:
             line_2_y = bar_2 - (line_h - bar_h) / 2
             line_2_x = bar_x + bar_w * emission_goal
             draw_screen.rectangle((line_2_x - line_w / 2, line_2_y, line_2_x + line_w / 2, line_2_y + line_h),
-                              (153, 153, 153))
+                                  (153, 153, 153))
         if cost_goal >= 0:
             line_3_y = bar_3 - (line_h - bar_h) / 2
             line_3_x = bar_x + bar_w * cost_goal
@@ -203,6 +210,25 @@ class UI:
 
     def get_2050_area(self):
         return (4532, 2461), (4532 + 129, 2461 + 129)
+
+    def apply_water_overlay(self, base):
+        # reverse geocode
+        positions = []
+        for data in self.water_potential.iterrows():
+            img_pos = self.map_data.rev_geocode((data[1].geometry.x,data[1].geometry.y))
+            if 0 <= img_pos[0] <= self.get_map_size()[0] and 0 <= img_pos[1] <= self.get_map_size()[1]:
+                positions.append(img_pos)
+        if len(positions) == 0:
+            return base  # no points to be rendered
+        # plot
+        fig = plt.figure(figsize=self.get_map_size(), dpi=1)
+        ax = fig.add_axes([0, 0, 1, 1])
+        ax.set_axis_off()
+        ax.imshow(base)
+        x, y = zip(*positions)
+        ax.scatter(x, y, c='b', s=5000000, alpha=0.8, marker=r'$\bigstar$')
+        fig.canvas.draw()
+        return Image.frombytes('RGB', fig.canvas.get_width_height(), fig.canvas.tostring_rgb())
 
 
 if __name__ == '__main__':
