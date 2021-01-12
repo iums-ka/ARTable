@@ -89,7 +89,7 @@ class MapListener(ArucoAreaListener):
                     'needed': place_energy,
                     'population': place_population
                 })
-                plant_energy = plant_possible_energy + min(place_energy - (created_energy + plant_possible_energy),0)
+                plant_energy = plant_possible_energy + min(place_energy - (created_energy + plant_possible_energy), 0)
                 plant_emission = eval(plant["emission_formula"], {
                     'potential': potential,
                     'needed': place_energy,
