@@ -11,7 +11,7 @@ class PlaceProvider:
     def list_all_containing(self, substring):
         names = []
         for place in self.places:
-            if substring in place['name']:
+            if substring.lower() in place['name'].lower():
                 names.append(place["name"])
         return names
 
