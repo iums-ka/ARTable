@@ -1,3 +1,4 @@
+import json
 from functools import partial
 
 import geotiler
@@ -30,6 +31,7 @@ class UI:
 
     def __init__(self):
         self.map_data = None
+        self.map_data_shading = None
         self.map_area = ((362, 173), (2784, 2606))
         self.place_selection_area = ((2615, 2446), (2743, 2574))
         print("Loading datasets...")
@@ -65,6 +67,9 @@ class UI:
         # hint: lon, lat instead of lat, lon
         self.map_data = geotiler.Map(extent=target_bounds, size=self.get_map_size())
         self.map_data.zoom += zoom_in
+        self.map_data_shading = geotiler.Map(extent=target_bounds, size=self.get_map_size())
+        self.map_data_shading.zoom += zoom_in
+        self.map_data_shading.provider = geotiler.provider.MapProvider(json.load(open("resources/hillshade.json", encoding='utf8', mode="r")))
         self.map_requires_rerender = True
 
     def render(self, place,
@@ -78,7 +83,9 @@ class UI:
             cache = Cache("tiles_cache")
             downloader = partial(caching_downloader, cache.get, cache.set, fetch_tiles)
             self.map_image = geotiler.render_map(self.map_data, downloader=downloader)
+            map_shading = geotiler.render_map(self.map_data_shading, downloader=downloader)
             cache.close()
+            self.map_image.alpha_composite(map_shading)
             self.map_requires_rerender = False
         screen.paste(self.map_image, self.get_map_area()[0])
         # bars (1735 x 92 at 2887,814; 2887,1123; 2887,1429) rgb(248, 215, 61)
