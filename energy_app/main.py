@@ -185,10 +185,10 @@ def key_input(key):
                     selected = -1
                     queue.put(None)
             if key == pynput.keyboard.Key.up:
-                selected = (selected + 1) % len(results)
+                selected = (selected + 1) % len(results) if len(results) > 0 else -1
                 queue.put(None)
             if key == pynput.keyboard.Key.down:
-                selected = (selected + len(results) - 1) % len(results)
+                selected = (selected + len(results) - 1) % len(results) if len(results) > 0 else -1
                 queue.put(None)
 
 
