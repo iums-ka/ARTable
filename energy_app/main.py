@@ -113,6 +113,8 @@ class MapListener(ArucoAreaListener):
             energy = self.ui.get_insolation(position)
         elif plant_type == "wind":
             energy = self.ui.get_wind(position)
+        elif plant_type == "water":
+            energy = self.ui.get_water(position)
         return energy
 
 

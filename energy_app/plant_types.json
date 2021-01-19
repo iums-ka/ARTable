@@ -31,6 +31,14 @@
       "cost_formula": "power*1000*0.35*population/500000000",
       "emission_formula": "power*0.066",
       "marker": 15
+    },
+    {
+      "name": "Wasserkraftwerk",
+      "type": "water",
+      "energy_formula": "potential*2000",
+      "cost_formula": "power*1000*0.35*population/500000000",
+      "emission_formula": "power*0.066",
+      "marker": 12
     }
   ]
 }

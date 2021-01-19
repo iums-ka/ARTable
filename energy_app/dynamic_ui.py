@@ -165,6 +165,17 @@ class UI:
     def get_wind(self, image_coordinates):
         return self.closest_tile(image_coordinates, self.wind_potential, "klasse")
 
+    def get_water(self, image_coordinates):
+        map_coordinates = self.image_coordinates_to_geocode(image_coordinates)
+        x, y = map_coordinates
+        spatial_index = self.water_potential.sindex
+        closest = self.water_potential.iloc[
+            list(spatial_index.nearest((x,y)))
+        ]
+        if any(closest.distance(Point(x,y)) <= 0.1):
+            return closest["EEBW_WAS_6"].values[0]
+        return None
+
     def image_coordinates_to_geocode(self, image_coordinates):
         relative_coordinates = ((image_coordinates[0] - self.get_map_area()[0][0]),
                                 (image_coordinates[1] - self.get_map_area()[0][1]))
@@ -178,8 +189,7 @@ class UI:
         result = self.get_closest_row(map_coordinates, dataframe)
         return result[key] if result is not None else None
 
-    def get_closest_row(self, point, dataframe):
-        epsilon = 0.1
+    def get_closest_row(self, point, dataframe, epsilon = 0.1):
         x, y = point
         spatial_index = dataframe.sindex
         filtered = dataframe.iloc[
@@ -216,6 +226,7 @@ class UI:
         positions = []
         for data in self.water_potential.iterrows():
             img_pos = self.map_data.rev_geocode((data[1].geometry.x,data[1].geometry.y))
+            # filter points outside of map
             if 0 <= img_pos[0] <= self.get_map_size()[0] and 0 <= img_pos[1] <= self.get_map_size()[1]:
                 positions.append(img_pos)
         if len(positions) == 0:
