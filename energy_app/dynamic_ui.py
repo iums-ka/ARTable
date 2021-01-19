@@ -81,7 +81,7 @@ class UI:
     def render(self, place,
                population, energy_consumption,
                coverage, emission, cost,
-               coverage_goal, emission_goal, cost_goal, search_data=None):
+               coverage_goal, emission_goal, cost_goal, search_data, visible_statements):
         # black background
         screen = Image.new('RGBA', (4902, 2756), color='black')
         # map (2423 x 2435 at 362, 172)
@@ -140,7 +140,6 @@ class UI:
             draw_screen.rectangle((line_3_x - line_w / 2, line_3_y, line_3_x + line_w / 2, line_3_y + line_h),
                                   (153, 153, 153))
         if search_data is not None:
-            print(search_data)
             font = ImageFont.truetype('MyriadPro-Regular.otf', 42)
             draw_screen.text((2192, 2480), search_data[0], 'black', font)
             draw_screen.rectangle((2174, 2450, 2174 + 564, 2450 - len(search_data[2]) * 54), (255, 255, 255))
@@ -149,7 +148,7 @@ class UI:
                                       (100, 100, 255))
             for i in range(len(search_data[2])):
                 draw_screen.text((2192, 2410 - i * 54), search_data[2][i], 'black', font)
-
+        print(visible_statements)
         return screen
 
     def render_default(self):
@@ -157,7 +156,7 @@ class UI:
         return self.render(default_name,
                            default_population, default_energy_consumption,
                            default_coverage, default_emission, default_cost,
-                           default_coverage_goal, default_emission_goal, default_cost_goal)
+                           default_coverage_goal, default_emission_goal, default_cost_goal, None, [])
 
     def get_insolation(self, image_coordinates):
         return self.closest_tile(image_coordinates, self.insolation, "CODE")

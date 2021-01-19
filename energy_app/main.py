@@ -1,4 +1,5 @@
 import json
+import random
 
 import pynput
 from pynput.keyboard import HotKey, Listener
@@ -37,6 +38,7 @@ def send(text):
 class MapListener(ArucoAreaListener):
     def reload(self):
         config = json.load(open("plant_types.json", mode="r", encoding="utf-8"))
+        self.statements = json.load(open("resources/stakes.json", mode="r", encoding="utf-8"))
         self.plants = {}
         ids = []
         for plant in config["types"]:
@@ -49,6 +51,7 @@ class MapListener(ArucoAreaListener):
         self.table = ar
         self.ui = dynamic_ui
         self.plants = {}
+        self.statements = {}
         self.active_plants = {}
         self.reload()
 
@@ -56,6 +59,7 @@ class MapListener(ArucoAreaListener):
         coords = self.table_pos_to_geocode(position)
         send("MARKER:enter:" + self.plants[marker_id]["name"] + ":" + str(coords[0]) + ":" + str(coords[1]))
         self.active_plants[marker_id] = self.table.table_to_image_coords(position)
+        self.update_statements(marker_id)
         self.sum_and_update()
 
     def on_move(self, marker_id, last_position, position):
@@ -68,6 +72,7 @@ class MapListener(ArucoAreaListener):
         coords = self.table_pos_to_geocode(last_position)
         send("MARKER:leave:" + self.plants[marker_id]["name"] + ":" + str(coords[0]) + ":" + str(coords[1]))
         self.active_plants.pop(marker_id)
+        self.update_statements()
         self.sum_and_update()
 
     def table_pos_to_geocode(self, position):
@@ -116,6 +121,23 @@ class MapListener(ArucoAreaListener):
         elif plant_type == "water":
             energy = self.ui.get_water(position)
         return energy
+
+    def update_statements(self, new_marker=-1):
+        global visible_statments
+        visible_statments = []
+        if len(self.active_plants.keys()) == 0: return
+        visible_statments.append(self.get_statement(new_marker))
+        visible_statments.append(self.get_statement(-1))
+        visible_statments = [dict(t) for t in {tuple(d.items()) for d in visible_statments}]
+
+    def get_statement(self, marker_id):
+        if marker_id == -1:
+            marker_id = random.sample(self.active_plants.keys(), 1)[0]
+        plant_type = self.plants[marker_id]["type"]
+        stakeholder = random.sample(["economist", "scientist", "conservationist"], 1)[0]
+        statement = random.sample(self.statements[plant_type][stakeholder], 1)[0]
+        statement["from"] = stakeholder
+        return statement
 
 
 class PlaceListener(ArucoAreaListener):
@@ -232,7 +254,7 @@ def update_table():
     search_data = (search, selected, results) if typing else None
     image = ui.render(place_name, place_population, place_energy, created_energy / place_energy,
                       created_emission / place_emission, created_cost / place_population,
-                      coverage_goal, emission_goal, cost_goal, search_data)
+                      coverage_goal, emission_goal, cost_goal, search_data, visible_statments)
     table.display(image)
 
 
@@ -256,6 +278,7 @@ if __name__ == '__main__':
     search = ""
     selected = -1
     results = []
+    visible_statments = []
     reload_hotkey = HotKey(HotKey.parse("<ctrl>+r"), reload_configs)
     reload_listener = Listener(
         on_press=for_canonical(reload_hotkey.press),
