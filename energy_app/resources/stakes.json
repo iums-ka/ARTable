@@ -1,0 +1,162 @@
+{
+  "solar": {
+    "economist": [
+      {
+        "temper": "positive",
+        "text": "Die Installation ist auf bereits bebauten Flächen möglich."
+      },
+      {
+        "temper": "positive",
+        "text": "Der Ausbau der Photovoltaik trägt wesentlich zur Dezentralisierung und damit zur Demokratisierung des Energieversorgungsmarktes bei."
+      },
+      {
+        "temper": "positive",
+        "text": "In einem durchschnittlichen Einfamilienhaus armotisiert sich eine PV-Anlage in der Regel nach 10-12 Jahren."
+      }
+    ],
+    "scientist": [
+      {
+        "temper": "positive",
+        "text": "Die Stromproduktion durch PV ist erneuerbar und umweltfreundlich. (Für die Erzeugung einer kWh Strom werden z.B. bei einem Kohlekraftwerk mehr als 26 Mal so viel CO2 ausgestossen)."
+      },
+      {
+        "temper": "negative",
+        "text": "Solaranlagen sind Tageszeit-, Wetter- und Standortabhängig."
+      },
+      {
+        "temper": "positive",
+        "text": "Die Technik wird immer ausgereifter und die Stromproduktion effizienter."
+      },
+      {
+        "temper": "positive",
+        "text": "PV-Anlagen erzeugen kaum Umwelt- und Nachhaltigkeitskosten."
+      }
+    ],
+    "conservationist": [
+      {
+        "temper": "neutral",
+        "text": "Der Fokus beim Ausbau der Photovoltaik muss verstärkt auf die Dachanlagen von Gebäuden gelegt werden um bestehende Biotope zu Schützen."
+      },
+      {
+        "temper": "neutral",
+        "text": "Nur auf Flächen, die vorher intensiv genutzt wurden, ist durch den Bau vonSolar-Freiflächenanlagen mit Verbesserungen für die Natur zu rechnen."
+      },
+      {
+        "temper": "negative",
+        "text": "Freiflächen-Photovoltaik beeinträchtig die Flora und Fauna und zerstört Lebensräume."
+      }
+    ]
+  },
+  "wind": {
+    "economist": [
+      {
+        "temper": "negative",
+        "text": "Windräder können das Landschaftsbild beeinträchtigen."
+      }
+    ],
+    "scientist": [
+      {
+        "temper": "neutral",
+        "text": "Ein Windrad spart etwa 1000 Mal mehr CO2 ein, als die zum Bau benötigte Waldfläche binden könnte."
+      },
+      {
+        "temper": "neutral",
+        "text": "Windräder sind Wetter- und Standortabhängig."
+      },
+      {
+        "temper": "neutral",
+        "text": "Windräder können das ganze Jahr über sowie Tag und Nacht Strom erzeugen."
+      }
+    ],
+    "conservationist": [
+      {
+        "temper": "neutral",
+        "text": "Windräder gefährden Vögel, z.B den seltenen Rotmilan."
+      },
+      {
+        "temper": "negative",
+        "text": "Für den Bau muss in der Regel Wald gerodet werden, der Biotop für diverse Tiere ist."
+      }
+    ]
+  },
+  "water": {
+    "economist": [
+      {
+        "temper": "neutral",
+        "text": ""
+      }
+    ],
+    "scientist": [
+      {
+        "temper": "neutral",
+        "text": ""
+      }
+    ],
+    "conservationist": [
+      {
+        "temper": "neutral",
+        "text": ""
+      }
+    ]
+  },
+  "bio": {
+    "economist": [
+      {
+        "temper": "neutral",
+        "text": ""
+      }
+    ],
+    "scientist": [
+      {
+        "temper": "neutral",
+        "text": ""
+      }
+    ],
+    "conservationist": [
+      {
+        "temper": "neutral",
+        "text": ""
+      }
+    ]
+  },
+  "atom": {
+    "economist": [
+      {
+        "temper": "neutral",
+        "text": ""
+      }
+    ],
+    "scientist": [
+      {
+        "temper": "neutral",
+        "text": ""
+      }
+    ],
+    "conservationist": [
+      {
+        "temper": "neutral",
+        "text": ""
+      }
+    ]
+  },
+  "coal": {
+    "economist": [
+      {
+        "temper": "neutral",
+        "text": ""
+      }
+    ],
+    "scientist": [
+      {
+        "temper": "neutral",
+        "text": ""
+      }
+    ],
+    "conservationist": [
+      {
+        "temper": "neutral",
+        "text": ""
+      }
+    ]
+  }
+}
