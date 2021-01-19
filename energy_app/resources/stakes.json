@@ -7,43 +7,43 @@
       },
       {
         "temper": "positive",
-        "text": "Der Ausbau der Photovoltaik trägt wesentlich zur Dezentralisierung und damit zur Demokratisierung des Energieversorgungsmarktes bei."
+        "text": "Der Ausbau der Photovoltaik trägt wesentlich zur Dezen-\ntralisierung und damit zur Demokratisierung des Ener-\ngieversorgungsmarktes bei."
       },
       {
         "temper": "positive",
-        "text": "In einem durchschnittlichen Einfamilienhaus armotisiert sich eine PV-Anlage in der Regel nach 10-12 Jahren."
+        "text": "In einem durchschnittlichen Einfamilienhaus armotisiert \nsich eine PV-Anlage in der Regel nach 10-12 Jahren."
       }
     ],
     "scientist": [
       {
         "temper": "positive",
-        "text": "Die Stromproduktion durch PV ist erneuerbar und umweltfreundlich. (Für die Erzeugung einer kWh Strom werden z.B. bei einem Kohlekraftwerk mehr als 26 Mal so viel CO2 ausgestossen)."
+        "text": "Die Stromproduktion durch PV ist erneuerbar und \numweltfreundlich. (Für die Erzeugung einer kWh Strom \nwerden z.B. bei einem Kohlekraftwerk mehr als 26 Mal so \nviel CO2 ausgestossen)."
       },
       {
         "temper": "negative",
-        "text": "Solaranlagen sind Tageszeit-, Wetter- und Standortabhängig."
+        "text": "Solaranlagen sind Tageszeit-, Wetter- und Standortab-\nhängig."
       },
       {
         "temper": "positive",
-        "text": "Die Technik wird immer ausgereifter und die Stromproduktion effizienter."
+        "text": "Die Technik wird immer ausgereifter und die Strom-\nproduktion effizienter."
       },
       {
         "temper": "positive",
-        "text": "PV-Anlagen erzeugen kaum Umwelt- und Nachhaltigkeitskosten."
+        "text": "PV-Anlagen erzeugen kaum Umwelt- und Nachhaltig-\nkeitskosten."
       }
     ],
     "conservationist": [
       {
         "temper": "neutral",
-        "text": "Der Fokus beim Ausbau der Photovoltaik muss verstärkt auf die Dachanlagen von Gebäuden gelegt werden um bestehende Biotope zu Schützen."
+        "text": "Der Fokus beim Ausbau der Photovoltaik muss ver-\nstärkt auf die Dachanlagen von Gebäuden gelegt wer-\nden, um bestehende Biotope zu Schützen."
       },
       {
         "temper": "neutral",
-        "text": "Nur auf Flächen, die vorher intensiv genutzt wurden, ist durch den Bau vonSolar-Freiflächenanlagen mit Verbesserungen für die Natur zu rechnen."
+        "text": "Nur auf Flächen, die vorher intensiv genutzt wurden, \nist durch den Bau von Solar-Freiflächenanlagen mit \nVerbesserungen für die Natur zu rechnen."
       },
       {
         "temper": "negative",
-        "text": "Freiflächen-Photovoltaik beeinträchtig die Flora und Fauna und zerstört Lebensräume."
+        "text": "Freiflächen-Photovoltaik beeinträchtig die \nFlora und Fauna und zerstört Lebensräume."
       }
     ]
   },
@@ -57,7 +57,7 @@
     "scientist": [
       {
         "temper": "neutral",
-        "text": "Ein Windrad spart etwa 1000 Mal mehr CO2 ein, als die zum Bau benötigte Waldfläche binden könnte."
+        "text": "Ein Windrad spart etwa 1000 Mal mehr CO2 ein, \nals die zum Bau benötigte Waldfläche binden könnte."
       },
       {
         "temper": "neutral",
@@ -65,7 +65,7 @@
       },
       {
         "temper": "neutral",
-        "text": "Windräder können das ganze Jahr über sowie Tag und Nacht Strom erzeugen."
+        "text": "Windräder können das ganze Jahr über sowie Tag und \nNacht Strom erzeugen."
       }
     ],
     "conservationist": [
@@ -75,7 +75,7 @@
       },
       {
         "temper": "negative",
-        "text": "Für den Bau muss in der Regel Wald gerodet werden, der Biotop für diverse Tiere ist."
+        "text": "Für den Bau muss in der Regel Wald gerodet werden, \nder Biotop für diverse Tiere ist."
       }
     ]
   },
