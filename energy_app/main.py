@@ -37,7 +37,7 @@ def send(text):
 
 class MapListener(ArucoAreaListener):
     def reload(self):
-        config = json.load(open("plant_types.json", mode="r", encoding="utf-8"))
+        config = json.load(open("resources/plant_types.json", mode="r", encoding="utf-8"))
         self.statements = json.load(open("resources/stakes.json", mode="r", encoding="utf-8"))
         self.plants = {}
         ids = []
@@ -142,7 +142,7 @@ class MapListener(ArucoAreaListener):
 
 class PlaceListener(ArucoAreaListener):
     def reload(self):
-        config = json.load(open("shortcut_places.json", mode="r", encoding="utf-8"))
+        config = json.load(open("resources/shortcut_places.json", mode="r", encoding="utf-8"))
         self.keyboard_id = config["keyboard"]
         self.places = {}
         ids = [self.keyboard_id]
@@ -225,7 +225,7 @@ def set_place(place):
 
 class YearListener(ArucoAreaListener):
     def reload(self):
-        config = json.load(open("years.json", mode="r", encoding="utf-8"))
+        config = json.load(open("resources/years.json", mode="r", encoding="utf-8"))
         all_goals = config[str(self.year)]
         self.goals = (all_goals["coverage_goal"], all_goals["emission_goal"], all_goals["cost_goal"])
         self.set_ids([config["marker"]])
