@@ -111,9 +111,9 @@ class UI:
         screen.alpha_composite(self.static_layer)
         # text (87 at 3467,195;3467,320;3467,445)
         text_s = 87
-        text_1 = 180
-        text_2 = 310
-        text_3 = 435
+        text_1 = 170
+        text_2 = 300
+        text_3 = 425
         text_x = 3500
         font = ImageFont.truetype('MyriadPro-Regular.otf', text_s)
         draw_screen.text((text_x, text_1), place, 'white', font)
@@ -148,8 +148,18 @@ class UI:
                                       (100, 100, 255))
             for i in range(len(search_data[2])):
                 draw_screen.text((2192, 2410 - i * 54), search_data[2][i], 'black', font)
-        print(visible_statements)
+        if len(visible_statements) >= 1:
+            self.draw_statement(draw_screen, screen, 2896, 1360, visible_statements[0])
+        if len(visible_statements) >= 2:
+            self.draw_statement(draw_screen, screen, 2896, 1840, visible_statements[1])
         return screen
+
+    def draw_statement(self, draw_screen, screen, x, y, statement):
+        icon = Image.open("resources/stakeholders/{}_{}.png".format(statement["from"], statement["temper"]))
+        icon = icon.resize((270, 270))
+        screen.alpha_composite(icon, (x,y))
+        font = ImageFont.truetype('MyriadPro-Regular.otf', 72)
+        draw_screen.text((x+300, y+10), statement["text"], 'white', font, spacing=16)
 
     def render_default(self):
         self.set_position(default_bounds)
@@ -169,9 +179,9 @@ class UI:
         x, y = map_coordinates
         spatial_index = self.water_potential.sindex
         closest = self.water_potential.iloc[
-            list(spatial_index.nearest((x,y)))
+            list(spatial_index.nearest((x, y)))
         ]
-        if any(closest.distance(Point(x,y)) <= 0.1):
+        if any(closest.distance(Point(x, y)) <= 0.1):
             return closest["EEBW_WAS_6"].values[0]
         return None
 
@@ -188,7 +198,7 @@ class UI:
         result = self.get_closest_row(map_coordinates, dataframe)
         return result[key] if result is not None else None
 
-    def get_closest_row(self, point, dataframe, epsilon = 0.1):
+    def get_closest_row(self, point, dataframe, epsilon=0.1):
         x, y = point
         spatial_index = dataframe.sindex
         filtered = dataframe.iloc[
@@ -224,7 +234,7 @@ class UI:
         # reverse geocode
         positions = []
         for data in self.water_potential.iterrows():
-            img_pos = self.map_data.rev_geocode((data[1].geometry.x,data[1].geometry.y))
+            img_pos = self.map_data.rev_geocode((data[1].geometry.x, data[1].geometry.y))
             # filter points outside of map
             if 0 <= img_pos[0] <= self.get_map_size()[0] and 0 <= img_pos[1] <= self.get_map_size()[1]:
                 positions.append(img_pos)
