@@ -83,7 +83,7 @@ class UI:
                coverage, emission, cost,
                coverage_goal, emission_goal, cost_goal, search_data, visible_statements):
         # black background
-        screen = Image.new('RGBA', (4902, 2756), color='black')
+        screen = Image.new('RGBA', (4902, 2755), color='black')
         # map (2423 x 2435 at 362, 172)
         if self.map_requires_rerender:
             cache = Cache("tiles_cache")
@@ -96,12 +96,12 @@ class UI:
             self.map_requires_rerender = False
         screen.paste(self.map_image, self.get_map_area()[0])
         # bars (1735 x 92 at 2887,814; 2887,1123; 2887,1429) rgb(248, 215, 61)
-        bar_w = 1735
-        bar_h = 92
-        bar_x = 2887
-        bar_1 = 814
-        bar_2 = 1123
-        bar_3 = 1429
+        bar_w = 1231
+        bar_h = 70
+        bar_x = 3572
+        bar_1 = 738
+        bar_2 = 907
+        bar_3 = 1081
         bar_c = (248, 215, 61)
         draw_screen = ImageDraw.Draw(screen)
         draw_screen.rectangle((bar_x, bar_1, bar_x + bar_w * coverage, bar_1 + bar_h), bar_c)
@@ -111,10 +111,10 @@ class UI:
         screen.alpha_composite(self.static_layer)
         # text (87 at 3467,195;3467,320;3467,445)
         text_s = 87
-        text_1 = 195
-        text_2 = 320
-        text_3 = 445
-        text_x = 3467
+        text_1 = 180
+        text_2 = 310
+        text_3 = 435
+        text_x = 3500
         font = ImageFont.truetype('MyriadPro-Regular.otf', text_s)
         draw_screen.text((text_x, text_1), place, 'white', font)
         import locale
@@ -122,8 +122,8 @@ class UI:
         draw_screen.text((text_x, text_2), "{:n} Menschen".format(int(population)), 'white', font)
         draw_screen.text((text_x, text_3), "{:n} MWh".format(int(energy_consumption)), 'white', font)
         # lines (12 x 178) rgb(153,153,153)
-        line_w = 12
-        line_h = 178
+        line_w = 8
+        line_h = 120
         if coverage_goal >= 0:
             line_1_y = bar_1 - (line_h - bar_h) / 2
             line_1_x = bar_x + bar_w * coverage_goal
@@ -212,13 +212,13 @@ class UI:
         return self.place_selection_area
 
     def get_2020_area(self):
-        return (2883, 2461), (2883 + 129, 2461 + 129)
+        return (2883, 2446), (2883 + 129, 2446 + 129)
 
     def get_2030_area(self):
-        return (3723, 2461), (3723 + 129, 2461 + 129)
+        return (3784, 2448), (3784 + 129, 2448 + 129)
 
     def get_2050_area(self):
-        return (4532, 2461), (4532 + 129, 2461 + 129)
+        return (4674, 2442), (4674 + 129, 2442 + 129)
 
     def apply_water_overlay(self, base):
         # reverse geocode
