@@ -83,7 +83,7 @@ class MapListener(ArucoAreaListener):
         created_energy = 0
         created_emission = 0
         created_cost = 0
-        for current_plant_type in ("water", "wind", "solar", "gas", "coal", "atom"):  # prioritization
+        for current_plant_type in ("water", "wind", "solar", "bio", "coal", "atom"):  # prioritization
             for marker_id in self.active_plants.keys():
                 plant = self.plants[marker_id]
                 if plant["type"] != current_plant_type:
@@ -253,7 +253,7 @@ class YearListener(ArucoAreaListener):
 def update_table():
     search_data = (search, selected, results) if typing else None
     image = ui.render(place_name, place_population, place_energy, created_energy / place_energy,
-                      created_emission / place_emission, created_cost / place_population,
+                      created_emission / place_emission, created_cost / (place_population*1000),
                       coverage_goal, emission_goal, cost_goal, search_data, visible_statments)
     table.display(image)
 
