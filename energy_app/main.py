@@ -253,7 +253,7 @@ class YearListener(ArucoAreaListener):
 def update_table():
     search_data = (search, selected, results) if typing else None
     image = ui.render(place_name, place_population, place_energy, created_energy / place_energy,
-                      created_emission / place_emission, created_cost / (place_population*1000),
+                      created_emission / place_emission, min(created_cost / (place_population*1000),1),
                       coverage_goal, emission_goal, cost_goal, search_data, visible_statments)
     table.display(image)
 
