@@ -38,7 +38,7 @@ def send(text):
 class MapListener(ArucoAreaListener):
     def reload(self):
         config = json.load(open("resources/plant_types.json", mode="r", encoding="utf-8"))
-        self.statements = json.load(open("resources/stakes.json", mode="r", encoding="utf-8"))
+        self.statements = json.load(open("resources/statements.json", mode="r", encoding="utf-8"))
         self.plants = {}
         ids = []
         for plant in config["types"]:
