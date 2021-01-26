@@ -28,7 +28,7 @@
       "name": "Biogasanlage",
       "type": "bio",
       "energy_formula": "needed*0.9",
-      "cost_formula": "power*1000*0.0",
+      "cost_formula": "power*1000*0.1747",
       "emission_formula": "power*0.500",
       "marker": 13
     },
