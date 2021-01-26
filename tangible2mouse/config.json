@@ -1,0 +1,7 @@
+{
+  "keys": {
+    "update": "g",
+    "toggle": "<shift>+g",
+    "reload": "<ctrl>+r"
+  }
+}
