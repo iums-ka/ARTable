@@ -60,17 +60,17 @@
         "text": "Ein Windrad spart etwa 1000 Mal mehr CO2 ein, \nals die zum Bau benötigte Waldfläche binden könnte."
       },
       {
-        "temper": "neutral",
+        "temper": "negative",
         "text": "Windräder sind Wetter- und Standortabhängig."
       },
       {
-        "temper": "neutral",
+        "temper": "positive",
         "text": "Windräder können das ganze Jahr über sowie Tag und \nNacht Strom erzeugen."
       }
     ],
     "conservationist": [
       {
-        "temper": "neutral",
+        "temper": "negative",
         "text": "Windräder gefährden Vögel, z.B den seltenen Rotmilan."
       },
       {
@@ -83,79 +83,167 @@
     "economist": [
       {
         "temper": "neutral",
-        "text": ""
+        "text": "Bereits ein kleines Wasserkraftwerk kann verlässlich \nzwei oder drei Dörfer das ganze Jahr mit Strom \nversorgen. "
+      },
+      {
+        "temper": "neutral",
+        "text": "Die Stromerzeugungskosten der Wasserkraft schwanken \nstark. Je größer die vorhandene Wassermasse und das \nWassergefälle sind, desto günstiger wird die Erzeugung."
+      },
+      {
+        "temper": "neutral",
+        "text": "Viele stillgelegte Wehre können re-aktiviert werden. \nDas spart Kosten, die bei einem Neuausbau anfielen."
       }
     ],
     "scientist": [
       {
         "temper": "neutral",
-        "text": ""
+        "text": "Strom aus Kleinwasserkraftwerken ist zwar etwas teurer, \nbietet aber eine gute Ergänzung für die dezentrale \numweltfreundliche Stromversorgung und spart Kosten \nfür den Leitungsausbau und umstrittene Umsiedlungen \nvon ganzen Dörfern."
+      },
+      {
+        "temper": "neutral",
+        "text": "Aus technischer Sicht bietet der Schwallbetrieb dieser \nKraftwerke die Möglichkeit spontaner Regulierungen \nund damit flexibler Leistungsanpassung. "
+      },
+      {
+        "temper": "negative",
+        "text": "Der Bau von Wasserkraftwerken hängt maßgeblich von \nder geografischen Lage ab."
       }
     ],
     "conservationist": [
       {
-        "temper": "neutral",
-        "text": ""
+        "temper": "negative",
+        "text": "Die (Wander-)Fischbevölkerung in den Flüssen leidet \nunter diesen Wasserkraftwerken. "
+      },
+      {
+        "temper": "negative",
+        "text": "Wasserkraftwerke können leicht das Ökosystem eines \nFlusses oder einer ganzen Landschaft verändern."
       }
     ]
   },
   "bio": {
     "economist": [
       {
+        "temper": "negative",
+        "text": "Biomasseanlagen beeinträchtigen das Landschaftbild"
+      },
+      {
+        "temper": "negative",
+        "text": "Biomasseanlagen verbreiten einen unangenehmen \nGeruch und erhöhen das Verkehrsaufkommen im Ort."
+      },
+      {
         "temper": "neutral",
-        "text": ""
+        "text": "Biogasanlagen erhöhen die Wirtschaftskraft von länd-\nlichen Kommunen durch die Einnahme von Gewerbe-\nsteuern, sowie durch den Erhalt der Wertschöpfung in \nder Region und vielerlei andere Wertschöpfungseffekte."
       }
     ],
     "scientist": [
       {
+        "temper": "positive",
+        "text": "Der Energiegehalt von Biomasse steht ohne wetter-\nabhängige Schwankungen zur Verfügung."
+      },
+      {
+        "temper": "positive",
+        "text": "Bioenergie in Form von Biogas ist sehr gut speicherbar."
+      },
+      {
         "temper": "neutral",
-        "text": ""
+        "text": "Auch mit so genanntem Biomüll kann Strom in \nBiomasseanlagen erzeugt werden."
+      },
+      {
+        "temper": "positive",
+        "text": "Die Bandbreite möglicher Anlagestandorte für \nBiomasseanlagen ist groß."
       }
     ],
     "conservationist": [
       {
-        "temper": "neutral",
-        "text": ""
+        "temper": "negative",
+        "text": "Biomasse führt zum vermehrten Anbau von Mono-\nkulturen, welche mittelfristig die Böden schädigen."
       }
     ]
   },
   "atom": {
     "economist": [
       {
+        "temper": "negative",
+        "text": "Kernkraftwerke beeinträchtigen das Landschaftbild"
+      },
+      {
+        "temper": "negative",
+        "text": "Es besteht immer ein geringes Restrisiko von \nKomplikationen im Kraftwerk, die im schlimmsten Fall zu \nKatastrophen führen können."
+      },
+      {
+        "temper": "positive",
+        "text": "Kernkraftwerke können einen großen Teil der Grundlast \nabdecken. Denn die Stromnnachfrage muss auch gedeckt \nsein, wenn keine Sonne scheint und kein Wind weht."
+      },
+      {
         "temper": "neutral",
-        "text": ""
+        "text": "Beim Uran ist Deutschland zu hundert Prozent auf \nImporte angewiesen. In einigen Jahrzehnten können \nEngpässe entstehen."
+      },
+      {
+        "temper": "positive",
+        "text": "Die relativ günstigen Stromgewinnungskosten"
       }
     ],
     "scientist": [
       {
-        "temper": "neutral",
-        "text": ""
+        "temper": "positive",
+        "text": "Kernenergie verursacht geringe Emissionen und kann \nin dieser Hinsicht mit den erneuerbaren Energieträgern \nmithalten."
+      },
+      {
+        "temper": "negative",
+        "text": "Kernkraftwerke sind sind unflexible Energielieferanten. \nEs ist nicht möglich die Energieerzeugung schnell \nan Energiespitzen anzupassen."
       }
     ],
     "conservationist": [
       {
-        "temper": "neutral",
-        "text": ""
+        "temper": "positive",
+        "text": "Kernenergie beansprucht vergleichsweise wenig \nFläche an einer geringen Anzahl an Standorten."
+      },
+      {
+        "temper": "negative",
+        "text": "Es ist nicht abschätzbar ob Endlager tatsächlich \nüber tausende Jahre sicher lagern oder in Zukunft \ndoch Landschaftsteile verstrahlt werden."
       }
     ]
   },
   "coal": {
     "economist": [
       {
-        "temper": "neutral",
-        "text": ""
+        "temper": "negative",
+        "text": "Kohlekraftwerke beeinträchtigen das Landschaftsbild."
+      },
+      {
+        "temper": "negative",
+        "text": "Kohlekraftwerke verunreinigen die Luft."
+      },
+      {
+        "temper": "positive",
+        "text": "Kohlekraftwerke sind gut geeignet die Grundlast \nabzudecken."
+      },
+      {
+        "temper": "positive",
+        "text": "Kohlekraftwerke können das ganze Jahr, rund um \ndie Uhr und bei jedem Wetter Strom erzeugen."
+      },
+      {
+        "temper": "positive",
+        "text": "Deutschland besitzt große Steinkohlevorkommen und \nist daher nicht auf einen Import aus anderen Ländern \nabhängig. Dies macht den Rohstoff und die erzeugte \nEnergie günstig."
       }
     ],
     "scientist": [
       {
+        "temper": "negative",
+        "text": "Da Kohle eine geringe Dichte besitzt, muss viel Kohle \nverbrannt werden, um verhältnismäßig wenig Strom \nzu erzeugen."
+      },
+      {
         "temper": "neutral",
-        "text": ""
+        "text": "Die Vorräte reichen laut aktuellem Stand der \nWissenschaft noch ca. 200 Jahre. Das macht die Kohle zu \neinem der am längsten lebenden fossilen Energieträgern."
       }
     ],
     "conservationist": [
       {
-        "temper": "neutral",
-        "text": ""
+        "temper": "negative",
+        "text": "Braunkohle wird im Tagebau abgebaut. Für Tagebau-\nanlagen müssen Natur- und Siedlungsflächen umge-\nsiedelt bzw. zerstört werden. Dadurch sinkt auch der \nGrundwasserspiegel. "
+      },
+      {
+        "temper": "negative",
+        "text": "Kohlekraftwerke verursachen eine hohe Umweltbe-\nlastung durch den Ausstoß von Schwefeloxid, Stick-\noxiden, Staub und CO2."
       }
     ]
   }
