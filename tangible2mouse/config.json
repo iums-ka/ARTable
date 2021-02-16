@@ -3,5 +3,14 @@
     "update": "g",
     "toggle": "<shift>+g",
     "reload": "<ctrl>+r"
-  }
+  },
+  "tangibles": {
+    "hover": 4,
+    "leftclick": 10,
+    "doubleclick": 11,
+    "rightclick": 12,
+    "middleclick": 13,
+    "drag": 14
+  },
+  "action_delay": 2
 }
