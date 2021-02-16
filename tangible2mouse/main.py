@@ -127,7 +127,7 @@ if __name__ == '__main__':
     reload_listener.start()
     table_conf = Configuration("table.json")
     table = ARTable(table_conf)
-    aruco = Aruco()
+    aruco = Aruco(marker_dict="DICT_6X6_250")
     table.add_plugin(aruco)
     listener = TangibleListener(((0,0),table_conf.table_size),delta=1,time_threshold=1)
     aruco.add_listener(listener)

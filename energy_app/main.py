@@ -300,7 +300,7 @@ if __name__ == '__main__':
     created_emission = 0
     created_cost = 0
     coverage_goal, emission_goal, cost_goal = -1, .95, -1
-    aruco = Aruco()
+    aruco = Aruco(marker_dict="DICT_6X6_250")
     table.add_plugin(aruco)
     update_table()
     map_listener = MapListener(table.image_to_table_coords(ui.get_map_interaction_area()), table, ui)

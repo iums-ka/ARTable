@@ -7,10 +7,12 @@ from artable.plugins.aruco.ArucoListener import ListenerBase
 
 
 class ArucoPlugin(Plugin):
-    def __init__(self):
+    def __init__(self, marker_dict=aruco.DICT_6X6_250):
         super().__init__()
         self.listeners = set()
-        self.aruco_dict = aruco.Dictionary_get(aruco.DICT_6X6_250)
+        if type(marker_dict) == str:
+            marker_dict = int(aruco.__dict__[marker_dict])
+        self.aruco_dict = aruco.Dictionary_get(marker_dict)
         self.parameters = aruco.DetectorParameters_create()
 
     def update(self, image: np.array):

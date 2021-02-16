@@ -1,4 +1,5 @@
 import json
+from cv2 import aruco
 
 
 class Configuration:
@@ -11,6 +12,7 @@ class Configuration:
             self.projector_markers = projector["marker"]
             self.table_size = (table["width"], table["height"])
             self.table_markers = table["marker"]
+            self.marker_dict = int(aruco.__dict__[table["marker_dict"]])
             self.projector_id = projector["screen"]
             self.camera_id = data["camera"]["index"]
             self.camera_resolution = (data["camera"]["width"], data["camera"]["height"])

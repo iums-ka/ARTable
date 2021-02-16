@@ -6,7 +6,8 @@
 			"size": 50,
 			"marker": [0,1,2,3],
 			"position": [[20,20], [20,20], [20,20], [20,20]]
-		}
+		},
+		"marker_dict": "DICT_6X6_250"
 	},
 	"projector": {
 		"width": 1920,

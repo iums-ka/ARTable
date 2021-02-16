@@ -162,7 +162,7 @@ class ARTable:
             [table_w - table_marker_size - table_marker_pos[3][0], table_h - table_marker_size - table_marker_pos[3][1]]
         ]
 
-        aruco_dict = aruco.Dictionary_get(aruco.DICT_6X6_250)
+        aruco_dict = aruco.Dictionary_get(self.config.marker_dict)
         parameters = aruco.DetectorParameters_create()
 
         # Calibrate camera to projector
