@@ -159,6 +159,24 @@
       }
     ]
   },
+
+  "gas": {
+    "economist": [
+      {
+        "temper": "positive",
+        "text": "Erdgaskraftwerke können bei Bedarf schnell \nhoch und wieder runtergefahren werden und \neignen sich daher gut zur kurzfristigen Spitzenabdeckung."
+      },
+      {
+        "temper": "positive",
+        "text": "Die Investitionskosten sind relativ gering und \nKraftwerke benötigen nur eine kurze Bauzeit."
+      },
+      {
+        "temper": "negative",
+        "text": "Deutschland ist auf Importe angewiesen - aus \nzum Teil politisch schwierigen Ländern."
+      }
+    ]
+
+  },
   "atom": {
     "economist": [
       {

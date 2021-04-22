@@ -7,7 +7,7 @@ from artable.plugins.aruco.ArucoListener import ListenerBase
 
 
 class ArucoPlugin(Plugin):
-    def __init__(self, marker_dict=aruco.DICT_6X6_250):
+    def __init__(self, marker_dict=aruco.DICT_4X4_250):
         super().__init__()
         self.listeners = set()
         if type(marker_dict) == str:
@@ -36,10 +36,10 @@ class ArucoPlugin(Plugin):
     def __get_tangible_coordinates(self, image):
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         corners, ids, rejected_img_points = aruco.detectMarkers(gray, self.aruco_dict, parameters=self.parameters)
-        frame_markers = aruco.drawDetectedMarkers(image, corners, ids, (0,0,255))
-        cv2.namedWindow('Marker', cv2.WINDOW_AUTOSIZE)
-        cv2.imshow('Marker', frame_markers)
-        cv2.waitKey(1)
+        # frame_markers = aruco.drawDetectedMarkers(image, corners, ids, (0,0,255))
+        # cv2.namedWindow('Marker', cv2.WINDOW_AUTOSIZE)
+        # cv2.imshow('Marker', frame_markers)
+        # cv2.waitKey(1)
         points = np.array([])
         if ids is not None:
             np_shape = np.array(corners)

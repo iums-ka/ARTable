@@ -115,7 +115,7 @@ class UI:
         text_2 = 300
         text_3 = 425
         text_x = 3500
-        font = ImageFont.truetype('MyriadPro-Regular.otf', text_s)
+        font = ImageFont.truetype('resources/MyriadPro-Regular.otf', text_s)
         draw_screen.text((text_x, text_1), place, 'white', font)
         import locale
         locale.setlocale(locale.LC_ALL, '')
@@ -140,7 +140,7 @@ class UI:
             draw_screen.rectangle((line_3_x - line_w / 2, line_3_y, line_3_x + line_w / 2, line_3_y + line_h),
                                   (153, 153, 153))
         if search_data is not None:
-            font = ImageFont.truetype('MyriadPro-Regular.otf', 42)
+            font = ImageFont.truetype('resources/MyriadPro-Regular.otf', 42)
             draw_screen.text((2192, 2480), search_data[0], 'black', font)
             draw_screen.rectangle((2174, 2450, 2174 + 564, 2450 - len(search_data[2]) * 54), (255, 255, 255))
             if search_data[1] != -1:
@@ -158,7 +158,7 @@ class UI:
         icon = Image.open("resources/stakeholders/{}_{}.png".format(statement["from"], statement["temper"]))
         icon = icon.resize((270, 270))
         screen.alpha_composite(icon, (x,y))
-        font = ImageFont.truetype('MyriadPro-Regular.otf', 72)
+        font = ImageFont.truetype('resources/MyriadPro-Regular.otf', 72)
         draw_screen.text((x+300, y+10), statement["text"], 'white', font, spacing=16)
 
     def render_default(self):
@@ -241,6 +241,7 @@ class UI:
         if len(positions) == 0:
             return base  # no points to be rendered
         # plot
+        plt.interactive(False)
         fig = plt.figure(figsize=self.get_map_size(), dpi=1)
         ax = fig.add_axes([0, 0, 1, 1])
         ax.set_axis_off()

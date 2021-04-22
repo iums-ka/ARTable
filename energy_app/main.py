@@ -83,7 +83,7 @@ class MapListener(ArucoAreaListener):
         created_energy = 0
         created_emission = 0
         created_cost = 0
-        for current_plant_type in ("water", "wind", "solar", "bio", "coal", "atom"):  # prioritization
+        for current_plant_type in ("water", "wind", "solar", "bio", "gas", "coal", "atom"):  # prioritization #gas hinzugefügt
             for marker_id in self.active_plants.keys():
                 plant = self.plants[marker_id]
                 if plant["type"] != current_plant_type:
@@ -288,7 +288,8 @@ if __name__ == '__main__':
     keyboard_listener.start()
     table = ARTable(Configuration("table.json"))
     ui = UI()
-    place_name = "Stadtkreis Karlsruhe"
+    place_name = "Baden-W\u00fcrttemberg"  #Vorher "Stadtkreis Karlsruhe
+    #place_name = "Baden-Wuerttemberg"
     place_provider = PlaceProvider()
     place_data = place_provider.get(place_name)
     place_population = place_data["population"]
@@ -300,7 +301,7 @@ if __name__ == '__main__':
     created_emission = 0
     created_cost = 0
     coverage_goal, emission_goal, cost_goal = -1, .95, -1
-    aruco = Aruco(marker_dict="DICT_6X6_250")
+    aruco = Aruco(marker_dict="DICT_4X4_250")
     table.add_plugin(aruco)
     update_table()
     map_listener = MapListener(table.image_to_table_coords(ui.get_map_interaction_area()), table, ui)

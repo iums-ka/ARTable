@@ -5,12 +5,13 @@
     "reload": "<ctrl>+r"
   },
   "tangibles": {
-    "hover": 4,
+    "hover": 7,
     "leftclick": 10,
     "doubleclick": 11,
     "rightclick": 12,
     "middleclick": 13,
     "drag": 14
   },
+  "screen_area": [0,0,1920,1080],
   "action_delay": 2
 }

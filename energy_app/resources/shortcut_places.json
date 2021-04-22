@@ -1,4 +1,35 @@
 {
-  "keyboard": 9,
-  "places" : []
+  "keyboard": 33,
+  "places" : [
+    {
+
+      "marker": 27,
+    "name": "Stadtkreis Stuttgart",
+    "bounds": [
+      9.040162,
+      48.689956,
+      9.315226,
+      48.866593
+    ],
+    "population": 635911,
+    "nuts3": "DE111",
+    "energy": 3852173.6,
+    "emissions": 3994450.21341458
+  },
+
+    {
+      "marker": 5,
+      "name": "Stadtkreis Karlsruhe",
+      "bounds": [
+        8.277349,
+        48.94036,
+        8.541143,
+        49.091529
+      ],
+      "population": 312060,
+      "nuts3": "DE122",
+      "energy": 1432640.0,
+      "emissions": 1485553.28704456
+    }
+  ]
 }

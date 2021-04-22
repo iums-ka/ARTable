@@ -11,6 +11,7 @@ from PIL import ImageDraw
 
 cursor_radius = 5
 
+
 class TangibleListener(ArucoAreaListener):
     def __init__(self, area, delta=5, time_threshold=2):
         super().__init__(area, [], delta, time_threshold)
@@ -43,7 +44,7 @@ class TangibleListener(ArucoAreaListener):
     def start_action_timer(self, marker_id):
         self.stop_action_timer()
         self.event = self.action[marker_id]
-        print("Scheduling "+ str(self.event) + " in " + str(self.delay) + " seconds")
+        print("Scheduling " + str(self.event) + " in " + str(self.delay) + " seconds")
         self.timer = threading.Timer(self.delay, self.timer_event)
         self.timer.start()
         pass
@@ -73,23 +74,26 @@ class TangibleListener(ArucoAreaListener):
 
 
 def reload_configs():
-    global hotkeys
+    global hotkeys, screen_area
     hotkeys = []
     config = json.load(open("config.json"))
+    screen_area = config["screen_area"]
     hotkeys.append(HotKey(HotKey.parse(config["keys"]["reload"]), reload_configs))
     hotkeys.append(HotKey(HotKey.parse(config["keys"]["toggle"]), toggle))
     hotkeys.append(HotKey(HotKey.parse(config["keys"]["update"]), update))
     listener.reload()
-    print(hotkeys)
+    print("Reloaded!")
 
 
 def update():
     pyautogui.moveTo(goal[0], goal[1])
 
+
 def toggle():
     global live
     live = not live
     print("live: ", live)
+
 
 def update_position(position):
     global goal
@@ -110,15 +114,17 @@ def hotkeys_release(key):
 
 
 def update_table():
-    screen = pyautogui.screenshot()
+    screen = pyautogui.screenshot(region=screen_area)
     draw = ImageDraw.Draw(screen)
-    draw.ellipse([goal[0] - cursor_radius, goal[1] - cursor_radius, goal[0] + cursor_radius, goal[1] + cursor_radius], fill="red")
+    draw.ellipse([goal[0] - cursor_radius, goal[1] - cursor_radius, goal[0] + cursor_radius, goal[1] + cursor_radius],
+                 fill="red")
     table.display(screen)
 
 
 if __name__ == '__main__':
+    screen_area = [0, 0, 1920, 1080]
     goal = (0, 0)
-    live = False
+    live = True
     hotkeys = []
     reload_listener = Listener(
         on_press=hotkeys_press,
@@ -127,9 +133,9 @@ if __name__ == '__main__':
     reload_listener.start()
     table_conf = Configuration("table.json")
     table = ARTable(table_conf)
-    aruco = Aruco(marker_dict="DICT_6X6_250")
+    aruco = Aruco(marker_dict="DICT_4X4_250")
     table.add_plugin(aruco)
-    listener = TangibleListener(((0,0),table_conf.table_size),delta=1,time_threshold=1)
+    listener = TangibleListener(((0, 0), table_conf.table_size), delta=1, time_threshold=1)
     aruco.add_listener(listener)
     reload_configs()
     table.start()
