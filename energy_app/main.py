@@ -47,7 +47,7 @@ class MapListener(ArucoAreaListener):
         self.set_ids(ids)
 
     def __init__(self, area, ar, dynamic_ui):
-        super().__init__(area)
+        super().__init__(area, delta=10, time_threshold=2) #reaction tangibles
         self.table = ar
         self.ui = dynamic_ui
         self.plants = {}
@@ -83,7 +83,7 @@ class MapListener(ArucoAreaListener):
         created_energy = 0
         created_emission = 0
         created_cost = 0
-        for current_plant_type in ("water", "wind", "solar", "bio", "gas", "coal", "atom"):  # prioritization #gas hinzugefügt
+        for current_plant_type in ("water", "wind", "solar", "bio", "gas", "atom", "coal"):  # prioritization #gas hinzugefügt
             for marker_id in self.active_plants.keys():
                 plant = self.plants[marker_id]
                 if plant["type"] != current_plant_type:
@@ -135,6 +135,8 @@ class MapListener(ArucoAreaListener):
             marker_id = random.sample(self.active_plants.keys(), 1)[0]
         plant_type = self.plants[marker_id]["type"]
         stakeholder = random.sample(["economist", "scientist", "conservationist"], 1)[0]
+        if stakeholder not in self.statements[plant_type]:
+            return self.get_statement(marker_id)
         statement = random.sample(self.statements[plant_type][stakeholder], 1)[0]
         statement["from"] = stakeholder
         return statement
@@ -176,7 +178,7 @@ class PlaceListener(ArucoAreaListener):
 
     def set_place(self, marker_id):
         place = self.places[marker_id]
-        ui.set_position(place["bounds"], zoom_in=0)
+        ui.set_position(place["bounds"])
         set_place(place)
         queue.put(None)  # call for update
 
@@ -202,7 +204,7 @@ def key_input(key):
             if key == pynput.keyboard.Key.enter:
                 if selected != -1:
                     place = place_provider.get(results[selected])
-                    ui.set_position(place["bounds"], zoom_in=1)
+                    ui.set_position(place["bounds"])
                     set_place(place)
                     results = []
                     search = ""

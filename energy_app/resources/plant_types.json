@@ -3,7 +3,7 @@
     {
       "name": "Solarpark1",
       "type": "solar",
-      "energy_formula": "10000",
+      "energy_formula": "population * 10000",
       "cost_formula": "power*1000*0.0824",
       "emission_formula": "power*0.0485",
       "marker": 11
@@ -24,7 +24,7 @@
       "energy_formula": "100000",
       "cost_formula": "power*1000*0.0824",
       "emission_formula": "power*0.0485",
-      "marker": 11
+      "marker": 13
     },
 
     {

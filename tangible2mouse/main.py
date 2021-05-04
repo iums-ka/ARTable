@@ -86,7 +86,7 @@ def reload_configs():
 
 
 def update():
-    pyautogui.moveTo(goal[0], goal[1])
+    pyautogui.moveTo(goal[0]+screen_area[0], goal[1]+screen_area[1])
 
 
 def toggle():
@@ -135,7 +135,7 @@ if __name__ == '__main__':
     table = ARTable(table_conf)
     aruco = Aruco(marker_dict="DICT_4X4_250")
     table.add_plugin(aruco)
-    listener = TangibleListener(((0, 0), table_conf.table_size), delta=1, time_threshold=1)
+    listener = TangibleListener(((0, 0), table_conf.table_size), delta=4, time_threshold=4)
     aruco.add_listener(listener)
     reload_configs()
     table.start()

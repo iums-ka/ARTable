@@ -1,4 +1,5 @@
 import json
+import math
 from functools import partial
 
 import geotiler
@@ -25,7 +26,7 @@ default_cost = .75
 default_coverage_goal = .97
 default_emission_goal = .45
 default_cost_goal = .55
-
+map_scale = 2
 
 class UI:
 
@@ -68,12 +69,10 @@ class UI:
         self.map_image = None
         self.map_requires_rerender = True
 
-    def set_position(self, target_bounds, zoom_in=2):
+    def set_position(self, target_bounds):
         # hint: lon, lat instead of lat, lon
-        self.map_data = geotiler.Map(extent=target_bounds, size=self.get_map_size())
-        self.map_data.zoom += zoom_in
-        self.map_data_shading = geotiler.Map(extent=target_bounds, size=self.get_map_size())
-        self.map_data_shading.zoom += zoom_in
+        self.map_data = geotiler.Map(extent=target_bounds, size=[math.ceil(x/map_scale) for x in self.get_map_size()])
+        self.map_data_shading = geotiler.Map(extent=target_bounds, size=[math.ceil(x/map_scale) for x in self.get_map_size()])
         self.map_data_shading.provider = geotiler.provider.MapProvider(
             json.load(open("resources/hillshade.json", encoding='utf8', mode="r")))
         self.map_requires_rerender = True
@@ -92,7 +91,9 @@ class UI:
             map_shading = geotiler.render_map(self.map_data_shading, downloader=downloader)
             cache.close()
             self.map_image.alpha_composite(map_shading)
-            self.map_image = self.apply_water_overlay(self.map_image)
+            self.map_image = self.map_image.resize(self.get_map_size())
+            if self.map_data.zoom > 10:
+                self.map_image = self.apply_water_overlay(self.map_image) # werden hier die Wasserkraftwerke reingeladen?
             self.map_requires_rerender = False
         screen.paste(self.map_image, self.get_map_area()[0])
         # bars (1735 x 92 at 2887,814; 2887,1123; 2887,1429) rgb(248, 215, 61)
@@ -188,6 +189,7 @@ class UI:
     def image_coordinates_to_geocode(self, image_coordinates):
         relative_coordinates = ((image_coordinates[0] - self.get_map_area()[0][0]),
                                 (image_coordinates[1] - self.get_map_area()[0][1]))
+        relative_coordinates = [math.ceil(x/map_scale) for x in relative_coordinates]
         return self.map_data.geocode(relative_coordinates)
 
     def closest_tile(self, image_coordinates, dataframe, key):
@@ -235,6 +237,7 @@ class UI:
         positions = []
         for data in self.water_potential.iterrows():
             img_pos = self.map_data.rev_geocode((data[1].geometry.x, data[1].geometry.y))
+            img_pos = [math.ceil(x*map_scale) for x in img_pos]
             # filter points outside of map
             if 0 <= img_pos[0] <= self.get_map_size()[0] and 0 <= img_pos[1] <= self.get_map_size()[1]:
                 positions.append(img_pos)
