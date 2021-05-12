@@ -7,6 +7,7 @@ from geotiler.tile.io import fetch_tiles
 from PIL import Image, ImageDraw, ImageFont  # todo: switch to cv2 for performance
 from geotiler.cache import caching_downloader
 import matplotlib.pyplot as plt
+from svgpath2mpl import parse_path
 from shapely.geometry import Point
 # install GDAL and Fiona first. Their wheels must be downloaded manually for Windows.
 # rtree, which must be downloaded manually is also needed.
@@ -257,7 +258,11 @@ class UI:
         ax.set_axis_off()
         ax.imshow(base)
         x, y = zip(*positions)
-        ax.scatter(x, y, c='b', s=5000000, alpha=0.8, marker=r'$\bigstar$')
+        drop = parse_path("m -8.2799839,0.07233615 c 0,-4.57587425 3.70948,-8.28535115 8.28535598,-8.28535115 "
+                          "4.57587602,0 8.28535582,3.7094769 8.28535562,8.28535115 C 8.2907274,4.64821 "
+                          "0.00537208,19.583016 0.00537208,19.583016 c 0,0 -8.28535598,-14.934806 "
+                          "-8.28535598,-19.51067985 z")
+        ax.scatter(x, y, c='b', s=15000000, alpha=0.8, marker=drop)
         fig.canvas.draw()
         return Image.frombytes('RGB', fig.canvas.get_width_height(), fig.canvas.tostring_rgb())
 
