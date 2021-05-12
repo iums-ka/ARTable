@@ -38,6 +38,7 @@ def send(text):
 class MapListener(ArucoAreaListener):
     def reload(self):
         config = json.load(open("resources/plant_types.json", mode="r", encoding="utf-8"))
+        self.plant_type_names = json.load(open("resources/plant_type_names.json", mode="r", encoding="utf-8"))
         self.statements = json.load(open("resources/statements.json", mode="r", encoding="utf-8"))
         self.plants = {}
         ids = []
@@ -53,6 +54,7 @@ class MapListener(ArucoAreaListener):
         self.plants = {}
         self.statements = {}
         self.active_plants = {}
+        self.plant_type_names = {}
         self.reload()
 
     def on_enter(self, marker_id, position):
@@ -89,6 +91,8 @@ class MapListener(ArucoAreaListener):
                 if plant["type"] != current_plant_type:
                     continue
                 potential = self.get_potential(plant["type"], self.active_plants[marker_id])
+                if potential is None:
+                    continue
                 plant_possible_energy = eval(plant["energy_formula"], {
                     'potential': potential,
                     'needed': place_energy,
@@ -139,6 +143,10 @@ class MapListener(ArucoAreaListener):
             return self.get_statement(marker_id)
         statement = random.sample(self.statements[plant_type][stakeholder], 1)[0]
         statement["from"] = stakeholder
+        if plant_type in self.plant_type_names:
+            statement["type"] = self.plant_type_names[plant_type]
+        else:
+            statement["type"] = plant_type
         return statement
 
 
@@ -166,6 +174,7 @@ class PlaceListener(ArucoAreaListener):
             self.set_place(marker_id)
         else:
             global typing
+            print("Search active")
             typing = True
 
     def on_move(self, marker_id, last_position, position):
@@ -174,6 +183,7 @@ class PlaceListener(ArucoAreaListener):
     def on_leave(self, marker_id, last_position):
         if marker_id == self.keyboard_id:
             global typing
+            print("Search disabled")
             typing = False
 
     def set_place(self, marker_id):

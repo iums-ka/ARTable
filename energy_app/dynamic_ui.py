@@ -160,7 +160,9 @@ class UI:
         icon = icon.resize((270, 270))
         screen.alpha_composite(icon, (x,y))
         font = ImageFont.truetype('resources/MyriadPro-Regular.otf', 72)
-        draw_screen.text((x+300, y+10), statement["text"], 'white', font, spacing=16)
+        font_smaller = ImageFont.truetype('resources/MyriadPro-Regular.otf', 64)
+        draw_screen.text((x+300, y-30), "(" + statement["type"] + ")", 'gray', font_smaller, spacing=16)
+        draw_screen.text((x+300, y+40), statement["text"], 'white', font, spacing=16)
 
     def render_default(self):
         self.set_position(default_bounds)
