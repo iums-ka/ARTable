@@ -323,7 +323,6 @@ if __name__ == '__main__':
     coverage_goal, emission_goal, cost_goal = -1, .95, -1
     aruco = Aruco(marker_dict="DICT_4X4_250")
     table.add_plugin(aruco)
-    update_table()
     map_listener = MapListener(table.image_to_table_coords(ui.get_map_interaction_area()), table, ui)
     aruco.add_listener(map_listener)
     place_listener = PlaceListener(table.image_to_table_coords(ui.get_place_selection_area()), table, ui)
@@ -331,10 +330,12 @@ if __name__ == '__main__':
     year_2020_listener = YearListener(table.image_to_table_coords(ui.get_2020_area()), table, ui, 2020)
     year_2030_listener = YearListener(table.image_to_table_coords(ui.get_2030_area()), table, ui, 2030)
     year_2050_listener = YearListener(table.image_to_table_coords(ui.get_2050_area()), table, ui, 2050)
+    coverage_goal, emission_goal, cost_goal = year_2020_listener.goals
     aruco.add_listener(year_2020_listener)
     aruco.add_listener(year_2030_listener)
     aruco.add_listener(year_2050_listener)
     table.start()
+    update_table()
     queue = LifoQueue()
     send("SYSTEM:running")
     while True:
