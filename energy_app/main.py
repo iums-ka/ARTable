@@ -1,5 +1,6 @@
 import json
 import random
+import threading
 
 import pynput
 from pynput.keyboard import HotKey, Listener
@@ -17,6 +18,7 @@ from energy_app.place_provider import PlaceProvider
 sending_enabled = False
 statements_only_latest = True
 force_two_statements = True
+statement_update_interval = 30
 
 
 async def _send(text):
@@ -57,6 +59,7 @@ class MapListener(ArucoAreaListener):
         self.statements = {}
         self.active_plants = {}
         self.plant_type_names = {}
+        self.update_timer = None
         self.reload()
 
     def on_enter(self, marker_id, position):
@@ -140,6 +143,15 @@ class MapListener(ArucoAreaListener):
         visible_statments = [dict(t) for t in {tuple(d.items()) for d in visible_statments}]  # remove duplicates
         if force_two_statements and len(visible_statments) < 2:
             self.update_statements(new_marker)
+        # reset update timer
+        if self.update_timer is not None:
+            self.update_timer.cancel()
+        self.update_timer = threading.Timer(statement_update_interval, self.auto_update_statements)
+        self.update_timer.start()
+
+    def auto_update_statements(self):
+        self.update_statements(-1)
+        queue.put(None)  # call for update
 
     def get_statement(self, marker_id):
         if marker_id == -1:
@@ -334,9 +346,9 @@ if __name__ == '__main__':
     aruco.add_listener(year_2020_listener)
     aruco.add_listener(year_2030_listener)
     aruco.add_listener(year_2050_listener)
+    queue = LifoQueue()
     table.start()
     update_table()
-    queue = LifoQueue()
     send("SYSTEM:running")
     while True:
         queue.get(block=True)
