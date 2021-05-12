@@ -270,6 +270,9 @@ class YearListener(ArucoAreaListener):
         self.reload()
 
     def on_enter(self, marker_id, position):
+        self.set_goals()
+
+    def set_goals(self):
         global coverage_goal, emission_goal, cost_goal
         print("Set goals to", self.year)
         coverage_goal, emission_goal, cost_goal = self.goals
@@ -342,13 +345,12 @@ if __name__ == '__main__':
     year_2020_listener = YearListener(table.image_to_table_coords(ui.get_2020_area()), table, ui, 2020)
     year_2030_listener = YearListener(table.image_to_table_coords(ui.get_2030_area()), table, ui, 2030)
     year_2050_listener = YearListener(table.image_to_table_coords(ui.get_2050_area()), table, ui, 2050)
-    coverage_goal, emission_goal, cost_goal = year_2020_listener.goals
     aruco.add_listener(year_2020_listener)
     aruco.add_listener(year_2030_listener)
     aruco.add_listener(year_2050_listener)
     queue = LifoQueue()
+    year_2020_listener.set_goals()
     table.start()
-    update_table()
     send("SYSTEM:running")
     while True:
         queue.get(block=True)
