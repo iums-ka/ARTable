@@ -15,6 +15,8 @@ import websockets
 from energy_app.place_provider import PlaceProvider
 
 sending_enabled = False
+statements_only_latest = True
+force_two_statements = True
 
 
 async def _send(text):
@@ -131,8 +133,13 @@ class MapListener(ArucoAreaListener):
         visible_statments = []
         if len(self.active_plants.keys()) == 0: return
         visible_statments.append(self.get_statement(new_marker))
-        visible_statments.append(self.get_statement(-1))
-        visible_statments = [dict(t) for t in {tuple(d.items()) for d in visible_statments}]
+        if statements_only_latest:
+            visible_statments.append(self.get_statement(new_marker))
+        else:
+            visible_statments.append(self.get_statement(-1))
+        visible_statments = [dict(t) for t in {tuple(d.items()) for d in visible_statments}]  # remove duplicates
+        if force_two_statements and len(visible_statments) < 2:
+            self.update_statements(new_marker)
 
     def get_statement(self, marker_id):
         if marker_id == -1:
