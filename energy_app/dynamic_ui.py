@@ -103,11 +103,16 @@ class UI:
         bar_1 = 738
         bar_2 = 907
         bar_3 = 1081
-        bar_c = (248, 215, 61)
+        bar_color_normal = (248, 215, 61)
+        bar_color_success = (188, 247, 61)
+        bar_color_failure = (247, 120, 61)
+        bar_c1 = bar_color_normal if coverage_goal < 0 or coverage < coverage_goal else bar_color_success
+        bar_c2 = bar_color_normal if emission_goal < 0 or emission < emission_goal else bar_color_failure
+        bar_c3 = bar_color_normal if cost_goal < 0 or cost < cost_goal else bar_color_failure
         draw_screen = ImageDraw.Draw(screen)
-        draw_screen.rectangle((bar_x, bar_1, bar_x + bar_w * coverage, bar_1 + bar_h), bar_c)
-        draw_screen.rectangle((bar_x, bar_2, bar_x + bar_w * emission, bar_2 + bar_h), bar_c)
-        draw_screen.rectangle((bar_x, bar_3, bar_x + bar_w * cost, bar_3 + bar_h), bar_c)
+        draw_screen.rectangle((bar_x, bar_1, bar_x + bar_w * coverage, bar_1 + bar_h), bar_c1)
+        draw_screen.rectangle((bar_x, bar_2, bar_x + bar_w * emission, bar_2 + bar_h), bar_c2)
+        draw_screen.rectangle((bar_x, bar_3, bar_x + bar_w * cost, bar_3 + bar_h), bar_c3)
         # static layer (4902 x 2756)
         screen.alpha_composite(self.static_layer)
         # text (87 at 3467,195;3467,320;3467,445)

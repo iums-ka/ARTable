@@ -259,6 +259,7 @@ class YearListener(ArucoAreaListener):
 
     def on_enter(self, marker_id, position):
         global coverage_goal, emission_goal, cost_goal
+        print("Set goals to", self.year)
         coverage_goal, emission_goal, cost_goal = self.goals
         queue.put(None)  # call for update
 
