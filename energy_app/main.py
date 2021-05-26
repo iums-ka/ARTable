@@ -274,8 +274,10 @@ class YearListener(ArucoAreaListener):
 
     def set_goals(self):
         global coverage_goal, emission_goal, cost_goal
+        global active_year
         print("Set goals to", self.year)
         coverage_goal, emission_goal, cost_goal = self.goals
+        active_year = self.year
         queue.put(None)  # call for update
 
     def on_move(self, marker_id, last_position, position):
@@ -289,7 +291,7 @@ def update_table():
     search_data = (search, selected, results) if typing else None
     image = ui.render(place_name, place_population, place_energy, created_energy / place_energy,
                       created_emission / place_emission, min(created_cost / (place_population*1000),1),
-                      coverage_goal, emission_goal, cost_goal, search_data, visible_statments)
+                      coverage_goal, emission_goal, cost_goal, search_data, visible_statments, active_year)
     table.display(image)
 
 
@@ -336,6 +338,7 @@ if __name__ == '__main__':
     created_emission = 0
     created_cost = 0
     coverage_goal, emission_goal, cost_goal = -1,-1,-1
+    active_year = 2020
     update_table()
     aruco = Aruco(marker_dict="DICT_4X4_250")
     table.add_plugin(aruco)

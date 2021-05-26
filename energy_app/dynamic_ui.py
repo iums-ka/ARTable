@@ -81,7 +81,8 @@ class UI:
     def render(self, place,
                population, energy_consumption,
                coverage, emission, costings,
-               coverage_goal, emission_goal, costings_goal, search_data, visible_statements):
+               coverage_goal, emission_goal, costings_goal,
+               search_data, visible_statements, active_year):
         # black background
         screen = Image.new('RGBA', (4902, 2755), color='black')
         # map (2423 x 2435 at 362, 172)
@@ -146,6 +147,14 @@ class UI:
             line_3_x = bar_x + bar_w * costings_goal
             draw_screen.rectangle((line_3_x - line_w / 2, line_3_y, line_3_x + line_w / 2, line_3_y + line_h),
                                   (153, 153, 153))
+
+        ul_y1 = 2656
+        ul_x1 = {2020: 2869, 2030: 3768, 2050: 4655}[active_year]
+        ul_y2 = ul_y1 + 6
+        ul_x2 = ul_x1 + 148
+
+        draw_screen.rectangle((ul_x1, ul_y1, ul_x2 ,ul_y2), (255, 255, 255))
+
         if search_data is not None:
             font = ImageFont.truetype('resources/MyriadPro-Regular.otf', 42)
             draw_screen.text((2192, 2480), search_data[0], 'black', font)
@@ -175,7 +184,8 @@ class UI:
         return self.render(default_name,
                            default_population, default_energy_consumption,
                            default_coverage, default_emission, default_cost,
-                           default_coverage_goal, default_emission_goal, default_cost_goal, None, [])
+                           default_coverage_goal, default_emission_goal, default_cost_goal,
+                           None, [], 2020)
 
     def get_insolation(self, image_coordinates):
         return self.closest_tile(image_coordinates, self.insolation, "CODE")
