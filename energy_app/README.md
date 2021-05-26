@@ -1,6 +1,9 @@
 # Energy App
 This ARTable-Application is part of ViewBW. It visualizes cost and use of different energy sources by allowing 
 the user to place power plants onto a map.
+
+![screenshot](https://github.com/iums-ka/ARTable/blob/master/energy_app/screenshot.png)
+
 ## Setup
 Make sure you have all the dependencies (including resources and configs) for the main script and the ui.
 Especially GDAL, Fiona and rtree might be difficult to install.
