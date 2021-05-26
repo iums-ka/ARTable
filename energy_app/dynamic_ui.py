@@ -82,6 +82,7 @@ class UI:
                population, energy_consumption,
                coverage, emission, costings,
                coverage_goal, emission_goal, costings_goal,
+               coverage_sign, emission_sign, costings_sign,
                search_data, visible_statements, active_year):
         # black background
         screen = Image.new('RGBA', (4902, 2755), color='black')
@@ -115,6 +116,20 @@ class UI:
         draw_screen.rectangle((bar_x, bar_1, bar_x + bar_w * coverage, bar_1 + bar_h), bar_c1)
         draw_screen.rectangle((bar_x, bar_2, bar_x + bar_w * emission, bar_2 + bar_h), bar_c2)
         draw_screen.rectangle((bar_x, bar_3, bar_x + bar_w * costings, bar_3 + bar_h), bar_c3)
+        text_s = 70
+        font = ImageFont.truetype('resources/MyriadPro-Regular.otf', text_s)
+        if coverage_sign > 0:
+            draw_screen.text((bar_x + bar_w * coverage+5, bar_1 + bar_h/2 - text_s/2), "»", bar_c1, font)
+        if coverage_sign < 0:
+            draw_screen.text((bar_x + bar_w * coverage+5, bar_1 + bar_h/2 - text_s/2), "«", bar_c1, font)
+        if emission_sign > 0:
+            draw_screen.text((bar_x + bar_w * emission+5, bar_2 + bar_h/2 - text_s/2), "»", bar_c2, font)
+        if emission_sign < 0:
+            draw_screen.text((bar_x + bar_w * emission+5, bar_2 + bar_h/2 - text_s/2), "«", bar_c2, font)
+        if costings_sign > 0:
+            draw_screen.text((bar_x + bar_w * costings+5, bar_3 + bar_h/2 - text_s/2), "»", bar_c3, font)
+        if costings_sign < 0:
+            draw_screen.text((bar_x + bar_w * costings+5, bar_3 + bar_h/2 - text_s/2), "«", bar_c3, font)
         # static layer (4902 x 2756)
         screen.alpha_composite(self.static_layer)
         # text (87 at 3467,195;3467,320;3467,445)
@@ -185,7 +200,7 @@ class UI:
                            default_population, default_energy_consumption,
                            default_coverage, default_emission, default_cost,
                            default_coverage_goal, default_emission_goal, default_cost_goal,
-                           None, [], 2020)
+                           0, 0, 0, None, [], 2020)
 
     def get_insolation(self, image_coordinates):
         return self.closest_tile(image_coordinates, self.insolation, "CODE")

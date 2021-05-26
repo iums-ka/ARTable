@@ -52,7 +52,7 @@ class MapListener(ArucoAreaListener):
         self.set_ids(ids)
 
     def __init__(self, area, ar, dynamic_ui):
-        super().__init__(area, delta=10, time_threshold=2) #reaction tangibles
+        super().__init__(area, delta=10, time_threshold=2)  # reaction tangibles
         self.table = ar
         self.ui = dynamic_ui
         self.plants = {}
@@ -90,7 +90,8 @@ class MapListener(ArucoAreaListener):
         created_energy = 0
         created_emission = 0
         created_cost = 0
-        for current_plant_type in ("water", "wind", "solar", "bio", "gas", "atom", "coal"):  # prioritization #gas hinzugefügt
+        for current_plant_type in (
+        "water", "wind", "solar", "bio", "gas", "atom", "coal"):  # prioritization #gas hinzugefügt
             for marker_id in self.active_plants.keys():
                 plant = self.plants[marker_id]
                 if plant["type"] != current_plant_type:
@@ -289,9 +290,14 @@ class YearListener(ArucoAreaListener):
 
 def update_table():
     search_data = (search, selected, results) if typing else None
-    image = ui.render(place_name, place_population, place_energy, created_energy / place_energy,
-                      created_emission / place_emission, min(created_cost / (place_population*1000),1),
-                      coverage_goal, emission_goal, cost_goal, search_data, visible_statments, active_year)
+    image = ui.render(place_name, place_population, place_energy,
+                      created_energy / place_energy, # [0,1]
+                      created_emission / place_emission, # [0,1]
+                      min(created_cost / (place_population * 1000), 1), # [0,1]
+                      coverage_goal, emission_goal, cost_goal, # [0,1] u {-1}
+                      coverage_sign, emission_sign, cost_sign, # {-1, 0, 1}
+                      search_data, visible_statments, active_year
+                      )
     table.display(image)
 
 
@@ -310,6 +316,7 @@ def for_canonical(f):
 
 
 if __name__ == '__main__':
+    coverage_sign, emission_sign, cost_sign = -1,0,1
     send("SYSTEM:startup")
     typing = False
     search = ""
@@ -325,8 +332,8 @@ if __name__ == '__main__':
     keyboard_listener.start()
     table = ARTable(Configuration("table.json"))
     ui = UI()
-    place_name = "Baden-W\u00fcrttemberg"  #Vorher "Stadtkreis Karlsruhe
-    #place_name = "Baden-Wuerttemberg"
+    place_name = "Baden-W\u00fcrttemberg"  # Vorher "Stadtkreis Karlsruhe
+    # place_name = "Baden-Wuerttemberg"
     place_provider = PlaceProvider()
     place_data = place_provider.get(place_name)
     place_population = place_data["population"]
@@ -337,7 +344,7 @@ if __name__ == '__main__':
     created_energy = 0
     created_emission = 0
     created_cost = 0
-    coverage_goal, emission_goal, cost_goal = -1,-1,-1
+    coverage_goal, emission_goal, cost_goal = -1, -1, -1
     active_year = 2020
     update_table()
     aruco = Aruco(marker_dict="DICT_4X4_250")
