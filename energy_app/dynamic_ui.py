@@ -80,8 +80,8 @@ class UI:
 
     def render(self, place,
                population, energy_consumption,
-               coverage, emission, cost,
-               coverage_goal, emission_goal, cost_goal, search_data, visible_statements):
+               coverage, emission, costings,
+               coverage_goal, emission_goal, costings_goal, search_data, visible_statements):
         # black background
         screen = Image.new('RGBA', (4902, 2755), color='black')
         # map (2423 x 2435 at 362, 172)
@@ -104,16 +104,16 @@ class UI:
         bar_1 = 738
         bar_2 = 907
         bar_3 = 1081
-        bar_color_normal = (248, 215, 61)
+        bar_color_default = (248, 215, 61)
         bar_color_success = (188, 247, 61)
         bar_color_failure = (247, 120, 61)
-        bar_c1 = bar_color_normal if coverage_goal < 0 or coverage < coverage_goal else bar_color_success
-        bar_c2 = bar_color_normal if emission_goal < 0 or emission < emission_goal else bar_color_failure
-        bar_c3 = bar_color_normal if cost_goal < 0 or cost < cost_goal else bar_color_failure
+        bar_c1 = bar_color_default if (coverage_goal < 0 and coverage < 1) or coverage < coverage_goal else bar_color_success
+        bar_c2 = bar_color_default if (emission_goal < 0 and emission < 1) or emission < emission_goal else bar_color_failure
+        bar_c3 = bar_color_default if (costings_goal < 0 and costings < 1) or costings < costings_goal else bar_color_failure
         draw_screen = ImageDraw.Draw(screen)
         draw_screen.rectangle((bar_x, bar_1, bar_x + bar_w * coverage, bar_1 + bar_h), bar_c1)
         draw_screen.rectangle((bar_x, bar_2, bar_x + bar_w * emission, bar_2 + bar_h), bar_c2)
-        draw_screen.rectangle((bar_x, bar_3, bar_x + bar_w * cost, bar_3 + bar_h), bar_c3)
+        draw_screen.rectangle((bar_x, bar_3, bar_x + bar_w * costings, bar_3 + bar_h), bar_c3)
         # static layer (4902 x 2756)
         screen.alpha_composite(self.static_layer)
         # text (87 at 3467,195;3467,320;3467,445)
@@ -141,9 +141,9 @@ class UI:
             line_2_x = bar_x + bar_w * emission_goal
             draw_screen.rectangle((line_2_x - line_w / 2, line_2_y, line_2_x + line_w / 2, line_2_y + line_h),
                                   (153, 153, 153))
-        if cost_goal >= 0:
+        if costings_goal >= 0:
             line_3_y = bar_3 - (line_h - bar_h) / 2
-            line_3_x = bar_x + bar_w * cost_goal
+            line_3_x = bar_x + bar_w * costings_goal
             draw_screen.rectangle((line_3_x - line_w / 2, line_3_y, line_3_x + line_w / 2, line_3_y + line_h),
                                   (153, 153, 153))
         if search_data is not None:
