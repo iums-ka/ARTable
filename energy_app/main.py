@@ -38,6 +38,8 @@ def send(text):
     else:
         print(text)
 
+def cmp(a, b):
+    return (a > b) - (a < b)
 
 class MapListener(ArucoAreaListener):
     def reload(self):
@@ -86,10 +88,10 @@ class MapListener(ArucoAreaListener):
         return self.ui.image_coordinates_to_geocode(self.table.table_to_image_coords(position))
 
     def sum_and_update(self):
-        global created_energy, created_emission, created_cost, place_energy, place_population
-        created_energy = 0
-        created_emission = 0
-        created_cost = 0
+        global created_energy, created_emission, created_cost, place_energy, place_population, \
+               coverage_sign, emission_sign, cost_sign
+        old_created_energy, old_created_emission, old_created_cost = created_energy, created_emission, created_cost
+        created_energy, created_emission, created_cost = 0, 0, 0
         for current_plant_type in (
         "water", "wind", "solar", "bio", "gas", "atom", "coal"):  # prioritization #gas hinzugefügt
             for marker_id in self.active_plants.keys():
@@ -120,6 +122,10 @@ class MapListener(ArucoAreaListener):
                 created_energy += plant_energy
                 created_emission += plant_emission
                 created_cost += plant_cost
+        coverage_sign, emission_sign, cost_sign = cmp(created_energy, old_created_energy), \
+                                                  cmp(created_emission, old_created_emission), \
+                                                  cmp(created_cost, old_created_cost), \
+
         queue.put(None)  # call for update
 
     def get_potential(self, plant_type, position):
@@ -316,7 +322,6 @@ def for_canonical(f):
 
 
 if __name__ == '__main__':
-    coverage_sign, emission_sign, cost_sign = -1,0,1
     send("SYSTEM:startup")
     typing = False
     search = ""
@@ -345,6 +350,7 @@ if __name__ == '__main__':
     created_emission = 0
     created_cost = 0
     coverage_goal, emission_goal, cost_goal = -1, -1, -1
+    coverage_sign, emission_sign, cost_sign = 0, 0, 0
     active_year = 2020
     update_table()
     aruco = Aruco(marker_dict="DICT_4X4_250")
