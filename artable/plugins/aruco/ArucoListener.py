@@ -6,7 +6,7 @@ import numpy as np
 
 class ListenerBase(ABC):
     @abstractmethod
-    def update(self, marker_id, position):
+    def update(self, marker_ids, positions):
         pass
 
 

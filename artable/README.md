@@ -36,4 +36,8 @@ The root object must contain the following entries:
       * `[x,y]` , where `x` is the horizontal (and `y` the vertical) distance from the corresponding border in mm.
 * `camera` : An object containing the camera's configuration:
   * `index` : The index of the camera to be used. `0` is a good guess.
+
 # Plugins
+You can find more information about Plugins in their directories.
+A plugin can access camera data and table transforms. 
+It is activated through calling `add_plugin()` on the table object before calling `start()`.
