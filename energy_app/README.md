@@ -2,8 +2,9 @@
 This ARTable-Application is part of ViewBW. It visualizes cost and use of different energy sources by allowing 
 the user to place power plants onto a map.
 ## Setup
-Make sure you have all the dependencies for the main script and the ui. Especially GDAL, Fiona and rtree
-might be difficult to install. https://www.lfd.uci.edu/~gohlke/pythonlibs/ is a good source for Windows binaries.
+Make sure you have all the dependencies (including resources and configs) for the main script and the ui.
+Especially GDAL, Fiona and rtree might be difficult to install.
+https://www.lfd.uci.edu/~gohlke/pythonlibs/ is a good source for Windows binaries.
 
 ## Configuration and Resource Formats
 The configuration is split up into several files:
