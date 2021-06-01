@@ -67,6 +67,7 @@ class UI:
             self.data_cache.close()
         print("Done.")
         self.static_layer = Image.open('resources/static-layer.png')
+        self.tutorial_overlay = Image.open('resources/tutorial-overlay.png')
         self.map_image = None
         self.map_requires_rerender = True
 
@@ -83,7 +84,8 @@ class UI:
                coverage, emission, costings,
                coverage_goal, emission_goal, costings_goal,
                coverage_sign, emission_sign, costings_sign,
-               search_data, visible_statements, active_year):
+               search_data, visible_statements, active_year,
+               show_tutorial):
         # black background
         screen = Image.new('RGBA', (4902, 2755), color='black')
         # map (2423 x 2435 at 362, 172)
@@ -183,6 +185,8 @@ class UI:
             self.draw_statement(draw_screen, screen, 2896, 1360, visible_statements[0])
         if len(visible_statements) >= 2:
             self.draw_statement(draw_screen, screen, 2896, 1840, visible_statements[1])
+        if show_tutorial:
+            screen.alpha_composite(self.tutorial_overlay)
         return screen
 
     def draw_statement(self, draw_screen, screen, x, y, statement):
@@ -200,7 +204,7 @@ class UI:
                            default_population, default_energy_consumption,
                            default_coverage, default_emission, default_cost,
                            default_coverage_goal, default_emission_goal, default_cost_goal,
-                           0, 0, 0, None, [], 2020)
+                           0, 0, 0, None, [], 2020, False)
 
     def get_insolation(self, image_coordinates):
         return self.closest_tile(image_coordinates, self.insolation, "CODE")

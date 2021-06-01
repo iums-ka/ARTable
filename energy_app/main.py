@@ -19,6 +19,7 @@ sending_enabled = False
 statements_only_latest = True
 force_two_statements = True
 statement_update_interval = 30
+tutorial_timeout = 180
 
 
 async def _send(text):
@@ -40,6 +41,44 @@ def send(text):
 
 def cmp(a, b):
     return (a > b) - (a < b)
+
+class OverlayListener(ArucoAreaListener):
+    def reload(self):
+        map_conf = json.load(open("resources/plant_types.json", mode="r", encoding="utf-8"))
+        ids = []
+        for plant in map_conf["types"]:
+            ids.append(plant["marker"])
+        self.set_ids(ids)
+
+    def __init__(self, area):
+        super().__init__(area, delta=10, time_threshold=2)
+        self.update_timer = None
+        self.reload()
+
+    def on_enter(self, marker_id, position):
+        self.hide()
+
+    def on_move(self, marker_id, last_position, position):
+        self.hide()
+
+    def on_leave(self, marker_id, last_position):
+        self.hide()
+
+    def hide(self):
+        global tutorial_visible
+        tutorial_visible = False
+        if self.update_timer is not None:
+            self.update_timer.cancel()
+        self.update_timer = threading.Timer(tutorial_timeout, self.show)
+        self.update_timer.start()
+        queue.put(None)  # call for update
+
+    def show(self):
+        global tutorial_visible
+        tutorial_visible = True
+        print("show tutorial due to no interaction")
+        queue.put(None)  # call for update
+
 
 class MapListener(ArucoAreaListener):
     def reload(self):
@@ -302,13 +341,15 @@ def update_table():
                       min(created_cost / (place_population * 1000), 1), # [0,1]
                       coverage_goal, emission_goal, cost_goal, # [0,1] u {-1}
                       coverage_sign, emission_sign, cost_sign, # {-1, 0, 1}
-                      search_data, visible_statments, active_year
+                      search_data, visible_statments, active_year,
+                      tutorial_visible
                       )
     table.display(image)
 
 
 def reload_configs():
     map_listener.reload()
+    overlay_listener.reload()
     place_listener.reload()
     year_2020_listener.reload()
     year_2030_listener.reload()
@@ -324,6 +365,7 @@ def for_canonical(f):
 if __name__ == '__main__':
     send("SYSTEM:startup")
     typing = False
+    tutorial_visible = True
     search = ""
     selected = -1
     results = []
@@ -357,6 +399,8 @@ if __name__ == '__main__':
     table.add_plugin(aruco)
     map_listener = MapListener(table.image_to_table_coords(ui.get_map_interaction_area()), table, ui)
     aruco.add_listener(map_listener)
+    overlay_listener = OverlayListener(table.image_to_table_coords(ui.get_map_interaction_area()))
+    aruco.add_listener(overlay_listener)
     place_listener = PlaceListener(table.image_to_table_coords(ui.get_place_selection_area()), table, ui)
     aruco.add_listener(place_listener)
     year_2020_listener = YearListener(table.image_to_table_coords(ui.get_2020_area()), table, ui, 2020)
