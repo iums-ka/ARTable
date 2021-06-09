@@ -5,8 +5,6 @@ from pynput.keyboard import HotKey, Listener
 from artable.plugins import Aruco, ArucoAreaListener
 from artable import ARTable, Configuration
 
-import geotiler
-
 import asyncio
 import websockets
 
@@ -65,13 +63,12 @@ class MapListener(ArucoAreaListener):
             ids.append(plant["marker"])
             self.plants[plant["marker"]] = plant
         self.set_ids(ids)
-        self.map = geotiler.Map(extent=config["map_bounds"],
-                                size=(self.area[2] - self.area[0], self.area[3] - self.area[1]))
+        self.map_bounds = config["map_bounds"]
 
     def __init__(self, area):
         super().__init__(area, delta=10, time_threshold=4)
         self.plants = {}
-        self.map = None
+        self.map_bounds = None
         self.reload()
 
     def on_enter(self, marker_id, position):
@@ -87,8 +84,13 @@ class MapListener(ArucoAreaListener):
         send("MARKER:leave:" + self.plants[marker_id]["name"] + ":" + str(coords[0]) + ":" + str(coords[1]))
 
     def table_pos_to_geocode(self, position):
-        if self.map is None: return 0,0
-        return self.map.geocode(position)
+        if self.map_bounds is None: return 0, 0
+        rel_x = (position[0] - self.area[0]) / (self.area[2] - self.area[0])
+        rel_y = 1 - (position[1] - self.area[1]) / (self.area[3] - self.area[1])
+        map_x = self.map_bounds[0] + rel_x * (self.map_bounds[2] - self.map_bounds[0])
+        map_y = self.map_bounds[1] + rel_y * (self.map_bounds[3] - self.map_bounds[1])
+        return map_x, map_y
+
 
 def reload_configs():
     global hotkeys
@@ -135,7 +137,7 @@ if __name__ == '__main__':
     listeners.append(ControlsListener("perspective", "detail"))
     listeners.append(ControlsListener("layer", "areas"))
     listeners.append(ControlsListener("layer", "noise"))
-    listeners.append(MapListener([(0,0),table.get_size()]))
+    listeners.append(MapListener([(0, 0), table.get_size()]))
     add_listeners()
     reload_configs()
     table.start()
