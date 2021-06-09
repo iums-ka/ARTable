@@ -94,8 +94,11 @@ class ARTable:
         cv2.waitKey(1)
 
     def add_plugin(self, plugin: Plugin):
-        plugin.set_transforms(self.table_camera_t, self.camera_table_t, self.camera_projector_t,
-                              self.projector_camera_t)
+        if self.config.has_projector:
+            plugin.set_transforms(self.table_camera_t, self.camera_table_t, self.camera_projector_t,
+                                  self.projector_camera_t)
+        else:
+            plugin.set_transforms(self.table_camera_t, self.camera_table_t)
         self.plugins.add(plugin)
 
     def remove_plugin(self, plugin: Plugin):
