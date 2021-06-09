@@ -105,7 +105,7 @@ class ARTable:
         plugin.removed()
         self.plugins.remove(plugin)
 
-    def get_size(self, unit: str):
+    def get_size(self, unit: str = "mm"):
         dimensions = {
             "mm": self.config.table_size,
             "cm": tuple([x / 10 for x in self.config.table_size]),
