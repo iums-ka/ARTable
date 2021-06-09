@@ -68,6 +68,7 @@ class OverlayListener(ArucoAreaListener):
     def hide(self):
         global tutorial_visible
         tutorial_visible = False
+        print("hide tutorial due to interaction")
         if self.update_timer is not None:
             self.update_timer.cancel()
         self.update_timer = threading.Timer(tutorial_timeout, self.show)
@@ -91,12 +92,14 @@ class InfoListener(ArucoAreaListener):
         self.reload()
 
     def on_enter(self, marker_id, position):
+        print("show info screen")
         self.set_visible(True)
 
     def on_move(self, marker_id, last_position, position):
         pass
 
     def on_leave(self, marker_id, last_position):
+        print("hide info screen")
         self.set_visible(False)
 
     def set_visible(self, visible):
@@ -437,6 +440,7 @@ if __name__ == '__main__':
     aruco.add_listener(year_2030_listener)
     aruco.add_listener(year_2050_listener)
     info_listener = InfoListener(table.image_to_table_coords([(0, 0), ui.screen_size]))
+    aruco.add_listener(info_listener)
     queue = LifoQueue()
     year_2020_listener.set_goals()
     table.start()
