@@ -35,7 +35,7 @@ class ControlsListener(ArucoAreaListener):
         self.set_ids([config["tangibles"][self.field_type]])
         pos = config["field_positions"][self.field_name]
         size = config["field_size"]
-        self.set_area((pos,[p+s for p,s in zip(pos,size)]))
+        self.set_area((pos, [p + s for p, s in zip(pos, size)]))
 
     def __init__(self, field_type, field_name):
         super().__init__([0, 0, 0, 0], delta=10, time_threshold=1)
@@ -58,6 +58,8 @@ def reload_configs():
     hotkeys = []
     config = json.load(open("config.json"))
     hotkeys.append(HotKey(HotKey.parse(config["keys"]["reload"]), reload_configs))
+    for listener in listeners:
+        listener.reload()
     print("Reloaded.")
 
 
