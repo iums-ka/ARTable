@@ -25,6 +25,9 @@ class AreaListener(ListenerBase, ABC):
     def set_ids(self, ids):
         self.ids = ids
 
+    def set_area(self, area):
+        self.area = np.array(area).flatten()
+
     def __inbounds(self, position):
         return (self.area[0] <= position[0] <= self.area[2]) and \
                (self.area[1] <= position[1] <= self.area[3])
