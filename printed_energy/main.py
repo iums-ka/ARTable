@@ -5,6 +5,8 @@ from pynput.keyboard import HotKey, Listener
 from artable.plugins import Aruco, ArucoAreaListener
 from artable import ARTable, Configuration
 
+import geotiler
+
 import asyncio
 import websockets
 
@@ -53,6 +55,41 @@ class ControlsListener(ArucoAreaListener):
         pass
 
 
+class MapListener(ArucoAreaListener):
+    def reload(self):
+        config = json.load(open("config.json", mode="r", encoding="utf-8"))
+        plant_types = json.load(open("resources/plant_types.json", mode="r", encoding="utf-8"))
+        self.plants = {}
+        ids = []
+        for plant in plant_types["types"]:
+            ids.append(plant["marker"])
+            self.plants[plant["marker"]] = plant
+        self.set_ids(ids)
+        self.map = geotiler.Map(extent=config["map_bounds"],
+                                size=(self.area[2] - self.area[0], self.area[3] - self.area[1]))
+
+    def __init__(self, area):
+        super().__init__(area, delta=10, time_threshold=4)
+        self.plants = {}
+        self.map = None
+        self.reload()
+
+    def on_enter(self, marker_id, position):
+        coords = self.table_pos_to_geocode(position)
+        send("MARKER:enter:" + self.plants[marker_id]["name"] + ":" + str(coords[0]) + ":" + str(coords[1]))
+
+    def on_move(self, marker_id, last_position, position):
+        coords = self.table_pos_to_geocode(position)
+        send("MARKER:move:" + self.plants[marker_id]["name"] + ":" + str(coords[0]) + ":" + str(coords[1]))
+
+    def on_leave(self, marker_id, last_position):
+        coords = self.table_pos_to_geocode(last_position)
+        send("MARKER:leave:" + self.plants[marker_id]["name"] + ":" + str(coords[0]) + ":" + str(coords[1]))
+
+    def table_pos_to_geocode(self, position):
+        if self.map is None: return 0,0
+        return self.map.geocode(position)
+
 def reload_configs():
     global hotkeys
     hotkeys = []
@@ -98,6 +135,7 @@ if __name__ == '__main__':
     listeners.append(ControlsListener("perspective", "detail"))
     listeners.append(ControlsListener("layer", "areas"))
     listeners.append(ControlsListener("layer", "noise"))
+    listeners.append(MapListener([(0,0),table.get_size()]))
     add_listeners()
     reload_configs()
     table.start()
