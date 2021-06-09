@@ -36,6 +36,7 @@ class UI:
         self.map_data_shading = None
         self.map_area = ((362, 173), (2784, 2606))
         self.place_selection_area = ((2615, 2446), (2743, 2574))
+        self.screen_size = (4901, 2755)
         print("Loading datasets...")
         self.data_cache = shelve.open("data_cache", writeback=True)
         if "sun" in self.data_cache.keys() and "wind" in self.data_cache.keys() and "water" in self.data_cache.keys():
@@ -68,6 +69,7 @@ class UI:
         print("Done.")
         self.static_layer = Image.open('resources/static-layer.png')
         self.tutorial_overlay = Image.open('resources/tutorial-overlay.png')
+        self.energieatlas_info = Image.open('resources/energieatlas-info.png')
         self.map_image = None
         self.map_requires_rerender = True
 
@@ -85,9 +87,11 @@ class UI:
                coverage_goal, emission_goal, costings_goal,
                coverage_sign, emission_sign, costings_sign,
                search_data, visible_statements, active_year,
-               show_tutorial):
+               show_tutorial, show_info):
+        if show_info:
+            return self.energieatlas_info
         # black background
-        screen = Image.new('RGBA', (4902, 2755), color='black')
+        screen = Image.new('RGBA', self.screen_size, color='black')
         # map (2423 x 2435 at 362, 172)
         if self.map_requires_rerender:
             cache = Cache("tiles_cache")
@@ -299,7 +303,7 @@ class UI:
 if __name__ == '__main__':
     ui = UI().render_default()
     print("Done. Showing result...")
-    fig = plt.figure(figsize=(4902, 2756), dpi=1)
+    fig = plt.figure(figsize=ui.screen_size, dpi=1)
     ax = plt.Axes(fig, [0., 0., 1., 1.])
     ax.set_axis_off()
     fig.add_axes(ax)

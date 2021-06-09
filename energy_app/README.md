@@ -150,6 +150,10 @@ Heavily truncated example:
 ```
 ### resources/static-layer.png
 Image containing static ui elements. Overlaid onto map and bars, overlaid by info, statements etc.
+### resources/tutorial-overlay.png
+Image containing descriptions for ui elements. Overlaid over the ui when nothing happens for some time.
+### resources/energieatlas-info.png
+Shown instead of the UI when info tangible is placed on the table.
 ### resources/stakeholders/
 Contains icons for stakeholders, naming scheme is `<profession>_<temper>.png`, where profession is one of
 conservationist, economist, scientist and temper is one of negative, neutral, positive. 

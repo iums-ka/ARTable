@@ -20,6 +20,7 @@ statements_only_latest = True
 force_two_statements = True
 statement_update_interval = 30
 tutorial_timeout = 180
+info_marker = 10
 
 
 async def _send(text):
@@ -78,6 +79,30 @@ class OverlayListener(ArucoAreaListener):
         tutorial_visible = True
         print("show tutorial due to no interaction")
         queue.put(None)  # call for update
+
+
+class InfoListener(ArucoAreaListener):
+    def reload(self):
+        marker_id = info_marker
+        self.set_ids([marker_id])
+
+    def __init__(self, area):
+        super().__init__(area, delta=10, time_threshold=4)
+        self.reload()
+
+    def on_enter(self, marker_id, position):
+        self.set_visible(True)
+
+    def on_move(self, marker_id, last_position, position):
+        pass
+
+    def on_leave(self, marker_id, last_position):
+        self.set_visible(False)
+
+    def set_visible(self, visible):
+        global info_visible
+        info_visible = visible
+        queue.put(None)
 
 
 class MapListener(ArucoAreaListener):
@@ -342,7 +367,7 @@ def update_table():
                       coverage_goal, emission_goal, cost_goal, # [0,1] u {-1}
                       coverage_sign, emission_sign, cost_sign, # {-1, 0, 1}
                       search_data, visible_statments, active_year,
-                      tutorial_visible
+                      tutorial_visible, info_visible
                       )
     table.display(image)
 
@@ -350,6 +375,7 @@ def update_table():
 def reload_configs():
     map_listener.reload()
     overlay_listener.reload()
+    info_listener.reload()
     place_listener.reload()
     year_2020_listener.reload()
     year_2030_listener.reload()
@@ -366,6 +392,7 @@ if __name__ == '__main__':
     send("SYSTEM:startup")
     typing = False
     tutorial_visible = True
+    info_visible = False
     search = ""
     selected = -1
     results = []
@@ -409,6 +436,7 @@ if __name__ == '__main__':
     aruco.add_listener(year_2020_listener)
     aruco.add_listener(year_2030_listener)
     aruco.add_listener(year_2050_listener)
+    info_listener = InfoListener(table.image_to_table_coords([(0, 0), ui.screen_size]))
     queue = LifoQueue()
     year_2020_listener.set_goals()
     table.start()
