@@ -18,8 +18,11 @@ class ARTable:
         self.config = config
         self.vc = self.__get_camera()
         print("Calibrating table...")
-        (self.table_camera_t, self.camera_table_t), (
-            self.projector_camera_t, self.camera_projector_t) = self.__calibrate()
+        if self.config.has_projector:
+            (self.table_camera_t, self.camera_table_t), (
+                self.projector_camera_t, self.camera_projector_t) = self.__calibrate()
+        else:
+            (self.table_camera_t, self.camera_table_t) = self.__calibrate()
         print("Done.")
         cv2.destroyWindow('Marker (Calibration)')
         self.plugins = set()
@@ -28,6 +31,8 @@ class ARTable:
         self.image_size = self.config.table_size
 
     def table_to_image_coords(self, points):
+        if not self.config.has_projector:
+            raise AssertionError("No projector configured.")
         points = np.array(points)
         keep_dim = True
         if np.array(points).ndim == 1:
@@ -41,6 +46,8 @@ class ARTable:
         return points if keep_dim else points[0]
 
     def image_to_table_coords(self, points):
+        if not self.config.has_projector:
+            raise AssertionError("No projector configured.")
         points = np.array(points)
         keep_dim = True
         if points.ndim == 1:
@@ -63,6 +70,8 @@ class ARTable:
         :param image: PIL-Image to display.
         :param xy: top left corner in mm.
         """
+        if not self.config.has_projector:
+            raise AssertionError("No projector configured.")
         self.image_size = image.size
         image = np.array(image)
         if xy is None:
@@ -97,9 +106,10 @@ class ARTable:
         dimensions = {
             "mm": self.config.table_size,
             "cm": tuple([x / 10 for x in self.config.table_size]),
-            "m": tuple([x / 1000 for x in self.config.table_size]),
-            "px": self.config.projector_resolution,
+            "m": tuple([x / 1000 for x in self.config.table_size])
         }
+        if self.config.has_projector:
+            dimensions["px"] = self.config.projector_resolution
         return dimensions.get(unit)
 
     def __get_color_image(self):
@@ -138,18 +148,6 @@ class ARTable:
         return mat, inv_mat
 
     def __calibrate(self):
-        proj_marker_ids = self.config.projector_markers["marker"]
-        proj_marker_size = self.config.projector_markers["size"]
-        proj_marker_pos = self.config.projector_markers["position"]
-        proj_w = self.config.projector_resolution[0]
-        proj_h = self.config.projector_resolution[1]
-        proj_abs_marker_pos = [
-            [proj_marker_pos[0][0], proj_marker_pos[0][1]],
-            [proj_w - proj_marker_pos[1][0] - proj_marker_size, proj_marker_pos[1][1]],
-            [proj_marker_pos[2][0], proj_h - proj_marker_pos[2][1] - proj_marker_size],
-            [proj_w - proj_marker_pos[3][0] - proj_marker_size, proj_h - proj_marker_pos[3][1] - proj_marker_size]
-        ]
-
         table_marker_ids = self.config.table_markers["marker"]
         table_marker_pos = self.config.table_markers["position"]
         table_marker_size = self.config.table_markers["size"]
@@ -165,24 +163,41 @@ class ARTable:
         aruco_dict = aruco.Dictionary_get(self.config.marker_dict)
         parameters = aruco.DetectorParameters_create()
 
-        # Calibrate camera to projector
-        img = np.zeros((proj_h, proj_w), np.uint8)
-        img[:, :] = 255
-        for i in range(0, 4):
-            marker = aruco.drawMarker(aruco_dict, proj_marker_ids[i], proj_marker_size)
-            img[proj_abs_marker_pos[i][1]:proj_abs_marker_pos[i][1] + proj_marker_size,
-            proj_abs_marker_pos[i][0]:proj_abs_marker_pos[i][0] + proj_marker_size] = marker
+        table_tf = self.__calculate_transformation(table_marker_ids, table_abs_marker_pos, aruco_dict, parameters)
 
-        # get the size of the screen
-        screen = screeninfo.get_monitors()[self.config.projector_id]
-        cv2.namedWindow("window", cv2.WND_PROP_FULLSCREEN)
-        cv2.setWindowProperty("window", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-        cv2.moveWindow("window", screen.x - 1, screen.y - 1)
-        cv2.imshow("window", img)
-        cv2.waitKey(1)
+        if self.config.has_projector:
+            proj_marker_ids = self.config.projector_markers["marker"]
+            proj_marker_size = self.config.projector_markers["size"]
+            proj_marker_pos = self.config.projector_markers["position"]
+            proj_w = self.config.projector_resolution[0]
+            proj_h = self.config.projector_resolution[1]
+            proj_abs_marker_pos = [
+                [proj_marker_pos[0][0], proj_marker_pos[0][1]],
+                [proj_w - proj_marker_pos[1][0] - proj_marker_size, proj_marker_pos[1][1]],
+                [proj_marker_pos[2][0], proj_h - proj_marker_pos[2][1] - proj_marker_size],
+                [proj_w - proj_marker_pos[3][0] - proj_marker_size, proj_h - proj_marker_pos[3][1] - proj_marker_size]
+            ]
+            # Calibrate camera to projector
+            img = np.zeros((proj_h, proj_w), np.uint8)
+            img[:, :] = 255
+            for i in range(0, 4):
+                marker = aruco.drawMarker(aruco_dict, proj_marker_ids[i], proj_marker_size)
+                img[proj_abs_marker_pos[i][1]:proj_abs_marker_pos[i][1] + proj_marker_size,
+                proj_abs_marker_pos[i][0]:proj_abs_marker_pos[i][0] + proj_marker_size] = marker
 
-        return self.__calculate_transformation(table_marker_ids, table_abs_marker_pos, aruco_dict, parameters), \
-               self.__calculate_transformation(proj_marker_ids, proj_abs_marker_pos, aruco_dict, parameters)
+            # get the size of the screen
+            screen = screeninfo.get_monitors()[self.config.projector_id]
+            cv2.namedWindow("window", cv2.WND_PROP_FULLSCREEN)
+            cv2.setWindowProperty("window", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+            cv2.moveWindow("window", screen.x - 1, screen.y - 1)
+            cv2.imshow("window", img)
+            cv2.waitKey(1)
+
+            proj_tf = self.__calculate_transformation(proj_marker_ids, proj_abs_marker_pos, aruco_dict, parameters)
+            return table_tf, proj_tf
+
+        return table_tf
+
 
     def __get_camera(self):
         vc = cv2.VideoCapture(self.config.camera_id)
