@@ -3,6 +3,7 @@ import asyncio
 import numpy as np
 import cv2
 from PIL import Image
+from PIL.Image import Image as PILImage
 from cv2 import aruco
 import screeninfo
 from threading import Thread
@@ -19,10 +20,17 @@ from artable.configuration import Configuration
 from artable.plugins.Plugin import Plugin
 
 
+def warpedGlVertex2f(x, y, mat):
+    v = np.dot(mat, [x, y, 1])
+    glVertex2f(v[0], v[1])
+
+warp = True
+
 class ARTableGL:
     def __init__(self, config: Configuration):
         self.config = config
         self.vc = self.__get_camera()
+        self.tex, self.fbo, self.draw_context, self.display_context = self.initGraphics()
         print("Calibrating table...")
         if self.config.has_projector:
             (self.table_camera_t, self.camera_table_t), (
@@ -35,12 +43,11 @@ class ARTableGL:
         self.stopped = False
         self.image_corners = ((0, 0), self.config.table_size)
         self.image_size = self.config.table_size
-        self.tex, self.fbo, self.draw_context, self.display_context = self.initGraphics()
 
     def initGraphics(self):
         glutInit(sys.argv)
         glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB)
-        glutInitWindowSize(0, 0)
+        glutInitWindowSize(self.config.projector_resolution[0], self.config.projector_resolution[1])
         glutCreateWindow("OpenGL Offscreen")
         glutHideWindow()
         glutDisplayFunc(lambda: ())
@@ -57,8 +64,11 @@ class ARTableGL:
         draw_context = glutGetWindow()
         glBindFramebuffer(GL_FRAMEBUFFER, 0)
         glutSetOption(GLUT_RENDERING_CONTEXT, GLUT_USE_CURRENT_CONTEXT)
+        screen = screeninfo.get_monitors()[self.config.projector_id]
+        glutInitWindowPosition(screen.x - 1, screen.y - 1)
         glutCreateWindow("OpenGL Display")
-        glutDisplayFunc(self.display)
+        glutFullScreen()
+        glutDisplayFunc(self.__display_function)
         display_context = glutGetWindow()
         return tex, fbo, draw_context, display_context
 
@@ -95,24 +105,84 @@ class ARTableGL:
     def update_display(self):
         w = glutGetWindow()
         glutSetWindow(self.display_context)
-        glutMainLoopEvent()
+        for _ in range(3):
+            self.__display_function()
+            glutMainLoopEvent()
         glutSetWindow(w)
 
-    def display_py_image(self, image):
+    def display(self, image: PILImage, xy: (float, float) = None):
+        print("image update recieved")
+        if not self.config.has_projector:
+            raise AssertionError("No projector configured.")
+        self.image_size = image.size
+        image = np.array(image)
+        if xy is None:
+            # stretch
+            self.image_corners = ((0, 0), self.config.table_size)
+            screen = cv2.resize(image,self.config.table_size)
+        else:
+            # move
+            self.image_corners = (xy, (xy[0] + self.image_size[0], xy[1] + self.image_size[1]))
+            screen = np.zeros((*self.config.table_size, 3), np.uint8)
+            screen[xy[0], xy[1]] = image
+        screen = Image.fromarray(screen)
+        #screen = screen.transpose(Image.FLIP_TOP_BOTTOM)
+        img_data = screen.convert("RGBA").tobytes()
         w = glutGetWindow()
-        image = image.transpose(Image.FLIP_TOP_BOTTOM)
-        image = image.resize((self.config.projector_resolution[0], self.config.projector_resolution[1]))
-        img_data = image.convert("RGB").tobytes()
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image.width, image.height, 0, GL_RGB, GL_UNSIGNED_BYTE, img_data)
-        glutSetWindow(w)
-
-    def display(self):
+        glutSetWindow(self.draw_context)
+        glBindFramebuffer(GL_FRAMEBUFFER, self.fbo)
         glClearColor(0, 0, 0, 1)
+        glClear(GL_COLOR_BUFFER_BIT)
+
+        img_tex = glGenTextures(1)
+        glBindTexture(GL_TEXTURE_2D, img_tex)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, screen.width, screen.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, img_data)
+        glBindTexture(GL_TEXTURE_2D, 0)
+
+        glMatrixMode(GL_PROJECTION)
+        glLoadIdentity()
+        glOrtho(0, 1, 0, 1, -1, 1)
+        glMatrixMode(GL_MODELVIEW)
+        glLoadIdentity()
+
+        glActiveTexture(GL_TEXTURE0)
+        glBindTexture(GL_TEXTURE_2D, img_tex)
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+        glEnable(GL_TEXTURE_2D)
+        glBegin(GL_QUADS)
+        glTexCoord2f(0., 0.)
+        glVertex2f(0., 0.)
+        glTexCoord2f(0., 1.)
+        glVertex2f(0., 1.)
+        glTexCoord2f(1., 1.)
+        glVertex2f(1., 1.)
+        glTexCoord2f(1., 0.)
+        glVertex2f(1., 0.)
+        glEnd()
+        glDisable(GL_TEXTURE_2D)
+        glBindTexture(GL_TEXTURE_2D, 0)
+
+        glFlush()
+        glBindFramebuffer(GL_FRAMEBUFFER, 0)
+        glutSetWindow(w)
+        self.update_display()
+        print("image update processed")
+
+    def __display_function(self):
+        global warp
+        mat = np.identity(3)
+        if warp:
+            mat = np.dot(self.camera_projector_t, self.table_camera_t)
+        input_size = self.config.projector_resolution
+        if warp:
+            input_size = self.config.table_size
+        glClearColor(0, 0, 0, 1)
+        glClear(GL_COLOR_BUFFER_BIT)
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
         glOrtho(0, self.config.projector_resolution[0], 0, self.config.projector_resolution[1], -1, 1)
         glMatrixMode(GL_MODELVIEW)
-        glLoadMatrixd(self.table_camera_t)
+        glLoadIdentity()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)  # clear the screen to the color of glClearColor
         glColor(1, 1, 1, 1)
         glActiveTexture(GL_TEXTURE0)
@@ -120,14 +190,18 @@ class ARTableGL:
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
         glEnable(GL_TEXTURE_2D)
         glBegin(GL_QUADS)
-        glTexCoord2f(0., 0.)
-        glVertex2f(100., 100.)
-        glTexCoord2f(0., 1.)
-        glVertex2f(100., self.config.projector_resolution[1] - 100.)
-        glTexCoord2f(1., 1.)
-        glVertex2f(self.config.projector_resolution[0] - 100., self.config.projector_resolution[1] - 100.)
         glTexCoord2f(1., 0.)
-        glVertex2f(self.config.projector_resolution[0] - 100., 100.)
+        #glVertex2f(0., 0.)
+        warpedGlVertex2f(0., 0., mat)
+        glTexCoord2f(1., 1.)
+        #glVertex2f(0., self.config.projector_resolution[1])
+        warpedGlVertex2f(0., input_size[1], mat)
+        glTexCoord2f(0., 1.)
+        #glVertex2f(self.config.projector_resolution[0], self.config.projector_resolution[1])
+        warpedGlVertex2f(input_size[0], input_size[1], mat)
+        glTexCoord2f(0., 0.)
+        #glVertex2f(self.config.projector_resolution[0], 0.)
+        warpedGlVertex2f(input_size[0], 0., mat)
         glEnd()
         glDisable(GL_TEXTURE_2D)
         glBindTexture(GL_TEXTURE_2D, 0)
@@ -229,13 +303,10 @@ class ARTableGL:
                 img[proj_abs_marker_pos[i][1]:proj_abs_marker_pos[i][1] + proj_marker_size,
                 proj_abs_marker_pos[i][0]:proj_abs_marker_pos[i][0] + proj_marker_size] = marker
 
-            # get the size of the screen
-            screen = screeninfo.get_monitors()[self.config.projector_id]
-            cv2.namedWindow("window", cv2.WND_PROP_FULLSCREEN)
-            cv2.setWindowProperty("window", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-            cv2.moveWindow("window", screen.x - 1, screen.y - 1)
-            cv2.imshow("window", img)
-            cv2.waitKey(1)
+            global warp
+            warp = False
+            self.display(img)
+            warp = True
 
             proj_tf = self.__calculate_transformation(proj_marker_ids, proj_abs_marker_pos, aruco_dict, parameters)
             return table_tf, proj_tf

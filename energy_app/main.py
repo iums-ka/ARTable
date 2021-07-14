@@ -6,7 +6,7 @@ import pynput
 from pynput.keyboard import HotKey, Listener
 
 from artable.plugins import Aruco, ArucoAreaListener
-from artable import ARTable, Configuration
+from artable import ARTableGL, Configuration
 from energy_app.dynamic_ui import UI
 from queue import LifoQueue
 
@@ -407,7 +407,7 @@ if __name__ == '__main__':
     keyboard_listener = Listener(on_press=key_input)
     reload_listener.start()
     keyboard_listener.start()
-    table = ARTable(Configuration("table.json"))
+    table = ARTableGL(Configuration("table.json"))
     ui = UI()
     place_name = "Baden-W\u00fcrttemberg"  # Vorher "Stadtkreis Karlsruhe
     # place_name = "Baden-Wuerttemberg"
