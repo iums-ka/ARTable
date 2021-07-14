@@ -47,7 +47,7 @@ class ARTableGL:
     def initGraphics(self):
         glutInit(sys.argv)
         glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB)
-        glutInitWindowSize(self.config.projector_resolution[0], self.config.projector_resolution[1])
+        glutInitWindowSize(self.config.table_size[0], self.config.table_size[1])
         glutCreateWindow("OpenGL Offscreen")
         glutHideWindow()
         glutDisplayFunc(lambda: ())
@@ -57,16 +57,18 @@ class ARTableGL:
         glBindFramebuffer(GL_FRAMEBUFFER, fbo)
         tex = glGenTextures(1)
         glBindTexture(GL_TEXTURE_2D, tex)
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, self.config.projector_resolution[0], self.config.projector_resolution[1], 0, GL_RGB, GL_UNSIGNED_BYTE, None)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, self.config.table_size[0], self.config.table_size[1], 0, GL_RGB, GL_UNSIGNED_BYTE, None)
         glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, tex, 0)
         glBindTexture(GL_TEXTURE_2D, 0)
-        glViewport(0, 0, self.config.projector_resolution[0], self.config.projector_resolution[1])
+        glViewport(0, 0, self.config.table_size[0], self.config.table_size[1])
         draw_context = glutGetWindow()
         glBindFramebuffer(GL_FRAMEBUFFER, 0)
+        glutInitWindowSize(self.config.projector_resolution[0], self.config.projector_resolution[1])
         glutSetOption(GLUT_RENDERING_CONTEXT, GLUT_USE_CURRENT_CONTEXT)
         screen = screeninfo.get_monitors()[self.config.projector_id]
         glutInitWindowPosition(screen.x - 1, screen.y - 1)
         glutCreateWindow("OpenGL Display")
+        glViewport(0, 0, self.config.projector_resolution[0], self.config.projector_resolution[1])
         glutFullScreen()
         glutDisplayFunc(self.__display_function)
         display_context = glutGetWindow()
@@ -126,11 +128,11 @@ class ARTableGL:
             screen = np.zeros((*self.config.table_size, 3), np.uint8)
             screen[xy[0], xy[1]] = image
         screen = Image.fromarray(screen)
-        #screen = screen.transpose(Image.FLIP_TOP_BOTTOM)
         img_data = screen.convert("RGBA").tobytes()
         w = glutGetWindow()
         glutSetWindow(self.draw_context)
         glBindFramebuffer(GL_FRAMEBUFFER, self.fbo)
+        glViewport(0, 0, self.config.table_size[0], self.config.table_size[1])
         glClearColor(0, 0, 0, 1)
         glClear(GL_COLOR_BUFFER_BIT)
 
@@ -177,6 +179,7 @@ class ARTableGL:
         if warp:
             input_size = self.config.table_size
         glClearColor(0, 0, 0, 1)
+        glViewport(0, 0, self.config.projector_resolution[0], self.config.projector_resolution[1])
         glClear(GL_COLOR_BUFFER_BIT)
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
