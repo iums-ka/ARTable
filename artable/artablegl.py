@@ -24,11 +24,10 @@ def warpedGlVertex2f(x, y, mat):
     v = np.dot(mat, [x, y, 1])
     glVertex2f(v[0], v[1])
 
-warp = True
-
 class ARTableGL:
     def __init__(self, config: Configuration):
         self.config = config
+        self.calibrated = False
         self.vc = self.__get_camera()
         self.tex, self.fbo, self.draw_context, self.display_context = self.initGraphics()
         print("Calibrating table...")
@@ -38,6 +37,7 @@ class ARTableGL:
         else:
             (self.table_camera_t, self.camera_table_t) = self.__calibrate()
         print("Done.")
+        self.calibrated = True
         cv2.destroyWindow('Marker (Calibration)')
         self.plugins = set()
         self.stopped = False
@@ -107,7 +107,7 @@ class ARTableGL:
     def update_display(self):
         w = glutGetWindow()
         glutSetWindow(self.display_context)
-        for _ in range(3):
+        for _ in range(2):
             self.__display_function()
             glutMainLoopEvent()
         glutSetWindow(w)
@@ -171,12 +171,11 @@ class ARTableGL:
         print("image update processed")
 
     def __display_function(self):
-        global warp
         mat = np.identity(3)
-        if warp:
+        if self.calibrated:
             mat = np.dot(self.camera_projector_t, self.table_camera_t)
         input_size = self.config.projector_resolution
-        if warp:
+        if self.calibrated:
             input_size = self.config.table_size
         glClearColor(0, 0, 0, 1)
         glViewport(0, 0, self.config.projector_resolution[0], self.config.projector_resolution[1])
@@ -194,16 +193,12 @@ class ARTableGL:
         glEnable(GL_TEXTURE_2D)
         glBegin(GL_QUADS)
         glTexCoord2f(1., 0.)
-        #glVertex2f(0., 0.)
         warpedGlVertex2f(0., 0., mat)
         glTexCoord2f(1., 1.)
-        #glVertex2f(0., self.config.projector_resolution[1])
         warpedGlVertex2f(0., input_size[1], mat)
         glTexCoord2f(0., 1.)
-        #glVertex2f(self.config.projector_resolution[0], self.config.projector_resolution[1])
         warpedGlVertex2f(input_size[0], input_size[1], mat)
         glTexCoord2f(0., 0.)
-        #glVertex2f(self.config.projector_resolution[0], 0.)
         warpedGlVertex2f(input_size[0], 0., mat)
         glEnd()
         glDisable(GL_TEXTURE_2D)
@@ -306,10 +301,8 @@ class ARTableGL:
                 img[proj_abs_marker_pos[i][1]:proj_abs_marker_pos[i][1] + proj_marker_size,
                 proj_abs_marker_pos[i][0]:proj_abs_marker_pos[i][0] + proj_marker_size] = marker
 
-            global warp
-            warp = False
+            #img = img.transpose(Image.FLIP_TOP_BOTTOM)
             self.display(img)
-            warp = True
 
             proj_tf = self.__calculate_transformation(proj_marker_ids, proj_abs_marker_pos, aruco_dict, parameters)
             return table_tf, proj_tf
