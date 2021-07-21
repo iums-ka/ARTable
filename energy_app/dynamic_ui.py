@@ -4,7 +4,7 @@ from functools import partial
 
 import geotiler
 from geotiler.tile.io import fetch_tiles
-from PIL import Image, ImageDraw, ImageFont  # todo: switch to cv2 for performance
+from PIL import Image, ImageDraw, ImageFont
 from geotiler.cache import caching_downloader
 import matplotlib.pyplot as plt
 from svgpath2mpl import parse_path
@@ -14,6 +14,10 @@ from shapely.geometry import Point
 # https://www.lfd.uci.edu/~gohlke/pythonlibs/ is a good source for Windows binaries
 import geopandas
 from energy_app.geotiler_shelvecache import Cache
+
+from OpenGL.GL import *
+from OpenGL.GLUT import *
+import freetype
 
 import shelve
 
@@ -29,9 +33,20 @@ default_emission_goal = .45
 default_cost_goal = .55
 map_scale = 2
 
+
+def gen_tex(img):
+    img_tex = glGenTextures(1)
+    img_data = img.convert("RGBA").tobytes()
+    glBindTexture(GL_TEXTURE_2D, img_tex)
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img.width, img.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, img_data)
+    glBindTexture(GL_TEXTURE_2D, 0)
+    return img_tex
+
+
 class UI:
 
-    def __init__(self):
+    def __init__(self, table):
+        self.table = table
         self.map_data = None
         self.map_data_shading = None
         self.map_area = ((362, 173), (2784, 2606))
@@ -68,9 +83,13 @@ class UI:
             self.data_cache.close()
         print("Done.")
         self.static_layer = Image.open('resources/static-layer.png')
+        self.static_layer_tex = gen_tex(self.static_layer)
         self.tutorial_overlay = Image.open('resources/tutorial-overlay.png')
+        self.tutorial_overlay_tex = gen_tex(self.tutorial_overlay)
         self.energieatlas_info = Image.open('resources/energieatlas-info.png')
+        self.energieatlas_info_tex = gen_tex(self.energieatlas_info)
         self.map_image = None
+        self.map_image_tex = None
         self.map_requires_rerender = True
 
     def set_position(self, target_bounds):
@@ -93,17 +112,7 @@ class UI:
         # black background
         screen = Image.new('RGBA', self.screen_size, color='black')
         # map (2423 x 2435 at 362, 172)
-        if self.map_requires_rerender:
-            cache = Cache("tiles_cache")
-            downloader = partial(caching_downloader, cache.get, cache.set, fetch_tiles)
-            self.map_image = geotiler.render_map(self.map_data, downloader=downloader)
-            map_shading = geotiler.render_map(self.map_data_shading, downloader=downloader)
-            cache.close()
-            self.map_image.alpha_composite(map_shading)
-            self.map_image = self.map_image.resize(self.get_map_size())
-            if self.map_data.zoom > 10:
-                self.map_image = self.apply_water_overlay(self.map_image) # werden hier die Wasserkraftwerke reingeladen?
-            self.map_requires_rerender = False
+        self.update_map()
         screen.paste(self.map_image, self.get_map_area()[0])
         # bars (1735 x 92 at 2887,814; 2887,1123; 2887,1429) rgb(248, 215, 61)
         bar_w = 1231
@@ -193,6 +202,93 @@ class UI:
             screen.alpha_composite(self.tutorial_overlay)
         return screen
 
+    def update_map(self):
+        if self.map_requires_rerender:
+            cache = Cache("tiles_cache")
+            downloader = partial(caching_downloader, cache.get, cache.set, fetch_tiles)
+            self.map_image = geotiler.render_map(self.map_data, downloader=downloader)
+            map_shading = geotiler.render_map(self.map_data_shading, downloader=downloader)
+            cache.close()
+            self.map_image.alpha_composite(map_shading)
+            self.map_image = self.map_image.resize(self.get_map_size())
+            if self.map_data.zoom > 10:
+                self.map_image = self.apply_water_overlay(
+                    self.map_image)  # werden hier die Wasserkraftwerke reingeladen?
+            self.map_requires_rerender = False
+            if self.map_image_tex is None:
+                self.map_image_tex = gen_tex(self.map_image)
+            else:
+                img_data = self.map_image.convert("RGBA").tobytes()
+                glBindTexture(GL_TEXTURE_2D, self.map_image_tex)
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, self.map_image.width, self.map_image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, img_data)
+                glBindTexture(GL_TEXTURE_2D, 0)
+
+
+    def rendergl(self, place,
+               population, energy_consumption,
+               coverage, emission, costings,
+               coverage_goal, emission_goal, costings_goal,
+               coverage_sign, emission_sign, costings_sign,
+               search_data, visible_statements, active_year,
+               show_tutorial, show_info):
+        # setup
+        w = glutGetWindow()
+        glutSetWindow(self.table.draw_context)
+        glBindFramebuffer(GL_FRAMEBUFFER, self.table.fbo)
+        glViewport(0, 0, self.table.config.table_size[0], self.table.config.table_size[1])
+        glClearColor(0, 0, 0, 1)
+        glClear(GL_COLOR_BUFFER_BIT)
+        glMatrixMode(GL_PROJECTION)
+        glLoadIdentity()
+        glOrtho(0, self.table.config.table_size[0], 0, self.table.config.table_size[1], -1, 1)
+        glMatrixMode(GL_MODELVIEW)
+        glLoadIdentity()
+
+        # drawing
+        if show_info:
+            self.fullscreen_composite(self.energieatlas_info_tex)
+            glFlush()
+            glBindFramebuffer(GL_FRAMEBUFFER, 0)
+            glutSetWindow(w)
+            self.table.update_display()
+            return
+
+        # map (2423 x 2435 at 362, 172)
+        self.update_map()
+        self.composite(self.map_image_tex, self.map_area[0][0], self.map_area[0][1], self.map_area[1][0], self.map_area[1][1])
+
+        # bars (1735 x 92 at 2887,814; 2887,1123; 2887,1429) rgb(248, 215, 61)
+        bar_w = 1231
+        bar_h = 70
+        bar_x = 3572
+        bar_1 = 738
+        bar_2 = 907
+        bar_3 = 1081
+        bar_color_default = (248, 215, 61)
+        bar_color_success = (188, 247, 61)
+        bar_color_failure = (247, 120, 61)
+        bar_c1 = bar_color_default if (coverage_goal < 0 and coverage < 1) or coverage < coverage_goal else bar_color_success
+        bar_c2 = bar_color_default if (emission_goal < 0 and emission < 1) or emission < emission_goal else bar_color_failure
+        bar_c3 = bar_color_default if (costings_goal < 0 and costings < 1) or costings < costings_goal else bar_color_failure
+        self.draw_bar(bar_x, bar_1, bar_w, bar_h, bar_c1, coverage)
+        self.draw_bar(bar_x, bar_2, bar_w, bar_h, bar_c2, emission)
+        self.draw_bar(bar_x, bar_3, bar_w, bar_h, bar_c3, costings)
+
+        self.fullscreen_composite(self.static_layer_tex)
+
+        if show_tutorial:
+            self.fullscreen_composite(self.tutorial_overlay_tex)
+
+        # finish
+        glFlush()
+        glBindFramebuffer(GL_FRAMEBUFFER, 0)
+        glutSetWindow(w)
+        self.table.update_display()
+
+    def draw_bar(self, bar_x, bar_y, bar_w, bar_h, bar_c, percentage):
+        glColor(bar_c[0]/255., bar_c[1]/255., bar_c[2]/255., 1)
+        glRectd(bar_x, bar_y, bar_x + bar_w * percentage, bar_y + bar_h)
+
     def draw_statement(self, draw_screen, screen, x, y, statement):
         icon = Image.open("resources/stakeholders/{}_{}.png".format(statement["from"], statement["temper"]))
         icon = icon.resize((270, 270))
@@ -208,7 +304,7 @@ class UI:
                            default_population, default_energy_consumption,
                            default_coverage, default_emission, default_cost,
                            default_coverage_goal, default_emission_goal, default_cost_goal,
-                           0, 0, 0, None, [], 2020, False)
+                           0, 0, 0, None, [], 2020, False, False)
 
     def get_insolation(self, image_coordinates):
         return self.closest_tile(image_coordinates, self.insolation, "CODE")
@@ -298,6 +394,31 @@ class UI:
         ax.scatter(x, y, c='b', s=15000000, alpha=0.8, marker=drop)
         fig.canvas.draw()
         return Image.frombytes('RGB', fig.canvas.get_width_height(), fig.canvas.tostring_rgb())
+
+    def fullscreen_composite(self, tex):
+        self.composite(tex, 0., 0., self.table.config.table_size[0], self.table.config.table_size[1])
+
+    def composite(self, tex, x_min, y_min, x_max, y_max):
+        glColor(1., 1., 1., 1.)
+        glActiveTexture(GL_TEXTURE0)
+        glBindTexture(GL_TEXTURE_2D, tex)
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        glEnable(GL_TEXTURE_2D)
+        glBegin(GL_QUADS)
+        glTexCoord2f(0., 0.)
+        glVertex2f(x_min, y_min)
+        glTexCoord2f(0., 1.)
+        glVertex2f(x_min, y_max)
+        glTexCoord2f(1., 1.)
+        glVertex2f(x_max, y_max)
+        glTexCoord2f(1., 0.)
+        glVertex2f(x_max, y_min)
+        glEnd()
+        glDisable(GL_TEXTURE_2D)
+        glDisable(GL_BLEND)
+        glBindTexture(GL_TEXTURE_2D, 0)
 
 
 if __name__ == '__main__':

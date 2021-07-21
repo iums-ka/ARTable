@@ -1,6 +1,7 @@
 import json
 import random
 import threading
+import time
 
 import pynput
 from pynput.keyboard import HotKey, Listener
@@ -363,16 +364,19 @@ class YearListener(ArucoAreaListener):
 
 def update_table():
     search_data = (search, selected, results) if typing else None
-    image = ui.render(place_name, place_population, place_energy,
-                      created_energy / place_energy, # % of needed
-                      created_emission / place_emission, # % of 2018
-                      min(created_cost / (place_population * 1000), 1), # [0,1]
-                      coverage_goal, emission_goal, cost_goal, # [0,1] u {-1}
-                      coverage_sign, emission_sign, cost_sign, # {-1, 0, 1}
-                      search_data, visible_statments, active_year,
-                      tutorial_visible, info_visible
-                      )
-    table.display(image)
+    start = time.time_ns()
+    ui.rendergl(place_name, place_population, place_energy,
+                created_energy / place_energy, # % of needed
+                created_emission / place_emission, # % of 2018
+                min(created_cost / (place_population * 1000), 1), # [0,1]
+                coverage_goal, emission_goal, cost_goal, # [0,1] u {-1}
+                coverage_sign, emission_sign, cost_sign, # {-1, 0, 1}
+                search_data, visible_statments, active_year,
+                tutorial_visible, info_visible
+                )
+    nspf = time.time_ns() - start
+    print("Frametime =", nspf/1000000000)
+    print("^=", 1000000000/nspf, "fps")
 
 
 def reload_configs():
@@ -408,7 +412,7 @@ if __name__ == '__main__':
     reload_listener.start()
     keyboard_listener.start()
     table = ARTableGL(Configuration("table.json"))
-    ui = UI()
+    ui = UI(table)
     place_name = "Baden-W\u00fcrttemberg"  # Vorher "Stadtkreis Karlsruhe
     # place_name = "Baden-Wuerttemberg"
     place_provider = PlaceProvider()
