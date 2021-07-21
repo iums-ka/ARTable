@@ -2,6 +2,7 @@ import json
 import math
 from functools import partial
 
+import locale
 import geotiler
 from geotiler.tile.io import fetch_tiles
 from PIL import Image, ImageDraw, ImageFont
@@ -17,7 +18,8 @@ from energy_app.geotiler_shelvecache import Cache
 
 from OpenGL.GL import *
 from OpenGL.GLUT import *
-import freetype
+from freetype import *
+import numpy as np
 
 import shelve
 
@@ -91,6 +93,11 @@ class UI:
         self.map_image = None
         self.map_image_tex = None
         self.map_requires_rerender = True
+        self.font_87 = self.makefont('resources/MyriadPro-Regular.otf', 87)
+        self.font_72 = self.makefont('resources/MyriadPro-Regular.otf', 72)
+        self.font_70 = self.makefont('resources/MyriadPro-Regular.otf', 70)
+        self.font_64 = self.makefont('resources/MyriadPro-Regular.otf', 64)
+        self.font_42 = self.makefont('resources/MyriadPro-Regular.otf', 42)
 
     def set_position(self, target_bounds):
         # hint: lon, lat instead of lat, lon
@@ -223,14 +230,13 @@ class UI:
                 glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, self.map_image.width, self.map_image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, img_data)
                 glBindTexture(GL_TEXTURE_2D, 0)
 
-
     def rendergl(self, place,
-               population, energy_consumption,
-               coverage, emission, costings,
-               coverage_goal, emission_goal, costings_goal,
-               coverage_sign, emission_sign, costings_sign,
-               search_data, visible_statements, active_year,
-               show_tutorial, show_info):
+                 population, energy_consumption,
+                 coverage, emission, costings,
+                 coverage_goal, emission_goal, costings_goal,
+                 coverage_sign, emission_sign, costings_sign,
+                 search_data, visible_statements, active_year,
+                 show_tutorial, show_info):
         # setup
         w = glutGetWindow()
         glutSetWindow(self.table.draw_context)
@@ -270,11 +276,23 @@ class UI:
         bar_c1 = bar_color_default if (coverage_goal < 0 and coverage < 1) or coverage < coverage_goal else bar_color_success
         bar_c2 = bar_color_default if (emission_goal < 0 and emission < 1) or emission < emission_goal else bar_color_failure
         bar_c3 = bar_color_default if (costings_goal < 0 and costings < 1) or costings < costings_goal else bar_color_failure
-        self.draw_bar(bar_x, bar_1, bar_w, bar_h, bar_c1, coverage)
-        self.draw_bar(bar_x, bar_2, bar_w, bar_h, bar_c2, emission)
-        self.draw_bar(bar_x, bar_3, bar_w, bar_h, bar_c3, costings)
+        self.draw_bar(bar_x, bar_1, bar_w, bar_h, bar_c1, coverage, coverage_sign)
+        self.draw_bar(bar_x, bar_2, bar_w, bar_h, bar_c2, emission, emission_sign)
+        self.draw_bar(bar_x, bar_3, bar_w, bar_h, bar_c3, costings, costings_sign)
 
+        # static layer
         self.fullscreen_composite(self.static_layer_tex)
+
+        # text (87 at 3467,195;3467,320;3467,445)
+        text_s = 87
+        text_1 = 170
+        text_2 = 300
+        text_3 = 425
+        text_x = 3500
+        locale.setlocale(locale.LC_ALL, '')
+        self.draw_text(self.font_87, place, text_x, text_1, (1,1,1,1))
+        self.draw_text(self.font_87, "{:n} Menschen".format(int(population)), text_x, text_2, (1,1,1,1))
+        self.draw_text(self.font_87, "{:n} MWh".format(int(energy_consumption)), text_x, text_3, (1,1,1,1))
 
         if show_tutorial:
             self.fullscreen_composite(self.tutorial_overlay_tex)
@@ -285,9 +303,14 @@ class UI:
         glutSetWindow(w)
         self.table.update_display()
 
-    def draw_bar(self, bar_x, bar_y, bar_w, bar_h, bar_c, percentage):
-        glColor(bar_c[0]/255., bar_c[1]/255., bar_c[2]/255., 1)
+    def draw_bar(self, bar_x, bar_y, bar_w, bar_h, bar_c, percentage, delta_sign):
+        bar_c = (bar_c[0] / 255., bar_c[1] / 255., bar_c[2] / 255., 1)
+        glColor(bar_c)
         glRectd(bar_x, bar_y, bar_x + bar_w * percentage, bar_y + bar_h)
+        if delta_sign > 0:
+            self.draw_text(self.font_70, "»", bar_x + bar_w * percentage + 5, bar_y - bar_h / 2 + 70 / 2, bar_c)
+        if delta_sign < 0:
+            self.draw_text(self.font_70, "«", bar_x + bar_w * percentage + 5, bar_y - bar_h / 2 + 70 / 2, bar_c)
 
     def draw_statement(self, draw_screen, screen, x, y, statement):
         icon = Image.open("resources/stakeholders/{}_{}.png".format(statement["from"], statement["temper"]))
@@ -419,6 +442,91 @@ class UI:
         glDisable(GL_TEXTURE_2D)
         glDisable(GL_BLEND)
         glBindTexture(GL_TEXTURE_2D, 0)
+
+    def draw_text(self, font, text, x, y, color):
+        glActiveTexture(GL_TEXTURE0)
+        glEnable(GL_BLEND)
+        glEnable(GL_TEXTURE_2D)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        glColor(color)
+        glBindTexture(GL_TEXTURE_2D, font[1])
+        glPushMatrix()
+        glTranslate(x, y, 0)
+        glPushMatrix()
+        glListBase(font[0])
+        glCallLists([ord(c) for c in text])
+        glPopMatrix()
+        glPopMatrix()
+        glDisable(GL_TEXTURE_2D)
+        glDisable(GL_BLEND)
+        glBindTexture(GL_TEXTURE_2D, 0)
+
+    def makefont(self, file_name, size):
+        # Load font  and check it is monotype
+        face = Face(file_name)
+        face.set_char_size(size * 64)
+
+        # Determine largest glyph size
+        width, height, ascender, descender = 0, 0, 0, 0
+        for c in range(32, 16 * 16):
+            face.load_char(chr(c), FT_LOAD_RENDER | FT_LOAD_FORCE_AUTOHINT)
+            bitmap = face.glyph.bitmap
+            width = max(width, bitmap.width)
+            ascender = max(ascender, face.glyph.bitmap_top)
+            descender = max(descender, bitmap.rows - face.glyph.bitmap_top)
+        height = ascender + descender
+
+        # Generate texture data
+        Z = np.zeros((height * 14, width * 16), dtype=np.ubyte)
+        widths = np.zeros((16 * 16,))
+        for j in range(14):
+            for i in range(16):
+                face.load_char(chr(32 + j * 16 + i), FT_LOAD_RENDER | FT_LOAD_FORCE_AUTOHINT)
+                bitmap = face.glyph.bitmap
+                x = i * width
+                y = j * height + ascender - face.glyph.bitmap_top
+                Z[y:y + bitmap.rows, x:x + bitmap.width].flat = bitmap.buffer
+                widths[(j + 2) * 16 + i] = bitmap.width
+        lefts = np.zeros((16 * 16,))
+        advs = np.zeros((16 * 16,))
+        for i in range(16 * 16):
+            face.load_char(chr(i), FT_LOAD_RENDER | FT_LOAD_FORCE_AUTOHINT)
+            lefts[i] = face.glyph.bitmap_left
+            advs[i] = face.glyph.metrics.horiAdvance
+
+        # Bound texture
+        texid = glGenTextures(1)
+        glBindTexture(GL_TEXTURE_2D, texid)
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, Z.shape[1], Z.shape[0], 0,
+                     GL_ALPHA, GL_UNSIGNED_BYTE, Z)
+
+        # Generate display lists
+        dx, dy = width / float(Z.shape[1]), height / float(Z.shape[0])
+        base = glGenLists(16 * 16)
+        for i in range(16 * 16):
+            c = chr(i)
+            x = i % 16
+            y = i // 16 - 2
+            glNewList(base + i, GL_COMPILE)
+            if c == '\n':
+                glPopMatrix()
+                glTranslatef(0, height, 0)
+                glPushMatrix()
+            elif c == '\t':
+                glTranslatef((advs[i] / 64), 0, 0)
+            elif i >= 32:
+                glTranslatef(lefts[i], -descender / 2, 0)
+                glBegin(GL_QUADS)
+                glTexCoord2f(x * dx, (y + 1) * dy), glVertex(0, height)
+                glTexCoord2f(x * dx, y * dy), glVertex(0, 0)
+                glTexCoord2f(x * dx + widths[i] / float(Z.shape[1]), y * dy), glVertex(widths[i], 0)
+                glTexCoord2f(x * dx + widths[i] / float(Z.shape[1]), (y + 1) * dy), glVertex(widths[i], height)
+                glEnd()
+                glTranslatef(advs[i] / 64 - lefts[i], descender / 2, 0)
+            glEndList()
+        return base, texid
 
 
 if __name__ == '__main__':
