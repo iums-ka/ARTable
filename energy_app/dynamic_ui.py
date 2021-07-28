@@ -1,5 +1,6 @@
 import json
 import math
+import os
 from functools import partial
 
 import locale
@@ -22,6 +23,8 @@ from freetype import *
 import numpy as np
 
 import shelve
+
+stakeholder_icon_path = "resources/stakeholders/"
 
 default_name = "Karlsruhe"
 default_bounds = [8.277349, 48.94036, 8.541143, 49.091529]
@@ -83,7 +86,7 @@ class UI:
             self.data_cache["wind"] = self.wind_potential
             self.data_cache["water"] = self.water_potential
             self.data_cache.close()
-        print("Done.")
+        print("Loading textures...")
         self.static_layer = Image.open('resources/static-layer.png')
         self.static_layer_tex = gen_tex(self.static_layer)
         self.tutorial_overlay = Image.open('resources/tutorial-overlay.png')
@@ -98,6 +101,13 @@ class UI:
         self.font_70 = self.makefont('resources/MyriadPro-Regular.otf', 70)
         self.font_64 = self.makefont('resources/MyriadPro-Regular.otf', 64)
         self.font_42 = self.makefont('resources/MyriadPro-Regular.otf', 42)
+        self.stakeholder_icons = {}
+        for icon_file in os.listdir(stakeholder_icon_path):
+            if icon_file.endswith(".png"):
+                icon_parts = icon_file.split(".")[0].split("_")
+                img = Image.open(stakeholder_icon_path + icon_file)
+                self.stakeholder_icons[(icon_parts[0], icon_parts[1])] = gen_tex(img)
+        print("Done.")
 
     def set_position(self, target_bounds):
         # hint: lon, lat instead of lat, lon
@@ -294,6 +304,46 @@ class UI:
         self.draw_text(self.font_87, "{:n} Menschen".format(int(population)), text_x, text_2, (1,1,1,1))
         self.draw_text(self.font_87, "{:n} MWh".format(int(energy_consumption)), text_x, text_3, (1,1,1,1))
 
+        # lines (12 x 178) rgb(153,153,153)
+        line_w = 8
+        line_h = 120
+        if coverage_goal >= 0:
+            line_1_y = bar_1 - (line_h - bar_h) / 2
+            line_1_x = bar_x + bar_w * coverage_goal
+            self.draw_rectangle((line_1_x - line_w / 2, line_1_y, line_1_x + line_w / 2, line_1_y + line_h),
+                                  (153./255., 153./255., 153./255., 1))
+        if emission_goal >= 0:
+            line_2_y = bar_2 - (line_h - bar_h) / 2
+            line_2_x = bar_x + bar_w * emission_goal
+            self.draw_rectangle((line_2_x - line_w / 2, line_2_y, line_2_x + line_w / 2, line_2_y + line_h),
+                                  (153./255., 153./255., 153./255., 1))
+        if costings_goal >= 0:
+            line_3_y = bar_3 - (line_h - bar_h) / 2
+            line_3_x = bar_x + bar_w * costings_goal
+            self.draw_rectangle((line_3_x - line_w / 2, line_3_y, line_3_x + line_w / 2, line_3_y + line_h),
+                                  (153./255., 153./255., 153./255., 1))
+
+        ul_y1 = 2656
+        ul_x1 = {2020: 2869, 2030: 3768, 2050: 4655}[active_year]
+        ul_y2 = ul_y1 + 6
+        ul_x2 = ul_x1 + 148
+
+        self.draw_rectangle((ul_x1, ul_y1, ul_x2 ,ul_y2), (1, 1, 1, 1))
+
+        if search_data is not None:
+            self.draw_text(self.font_42, search_data[0], 2192, 2480, (0, 0, 0, 1))
+            self.draw_rectangle((2174, 2450, 2174 + 564, 2450 - len(search_data[2]) * 54), (1, 1, 1, 1))
+            if search_data[1] != -1:
+                self.draw_rectangle((2174, 2450 - search_data[1] * 54, 2174 + 564, 2450 - search_data[1] * 54 - 54),
+                                      (100./255., 100./255., 255./255., 1))
+            for i in range(len(search_data[2])):
+                self.draw_text(self.font_42, search_data[2][i], 2192, 2410 - i * 54, (0, 0, 0, 1))
+
+        if len(visible_statements) >= 1:
+            self.draw_statement_gl(2896, 1360, visible_statements[0])
+        if len(visible_statements) >= 2:
+            self.draw_statement_gl(2896, 1840, visible_statements[1])
+
         if show_tutorial:
             self.fullscreen_composite(self.tutorial_overlay_tex)
 
@@ -305,12 +355,15 @@ class UI:
 
     def draw_bar(self, bar_x, bar_y, bar_w, bar_h, bar_c, percentage, delta_sign):
         bar_c = (bar_c[0] / 255., bar_c[1] / 255., bar_c[2] / 255., 1)
-        glColor(bar_c)
-        glRectd(bar_x, bar_y, bar_x + bar_w * percentage, bar_y + bar_h)
+        self.draw_rectangle((bar_x, bar_y, bar_x + bar_w * percentage, bar_y + bar_h), bar_c)
         if delta_sign > 0:
             self.draw_text(self.font_70, "»", bar_x + bar_w * percentage + 5, bar_y - bar_h / 2 + 70 / 2, bar_c)
         if delta_sign < 0:
             self.draw_text(self.font_70, "«", bar_x + bar_w * percentage + 5, bar_y - bar_h / 2 + 70 / 2, bar_c)
+
+    def draw_rectangle(self, bounds, color):
+        glColor(color)
+        glRectd(*bounds)
 
     def draw_statement(self, draw_screen, screen, x, y, statement):
         icon = Image.open("resources/stakeholders/{}_{}.png".format(statement["from"], statement["temper"]))
@@ -320,6 +373,12 @@ class UI:
         font_smaller = ImageFont.truetype('resources/MyriadPro-Regular.otf', 64)
         draw_screen.text((x+300, y-30), "(" + statement["type"] + ")", 'gray', font_smaller, spacing=16)
         draw_screen.text((x+300, y+40), statement["text"], 'white', font, spacing=16)
+
+    def draw_statement_gl(self, x, y, statement):
+        icon = self.stakeholder_icons[(statement["from"], statement["temper"])]
+        self.composite(icon, x, y, x+270, y+270)
+        self.draw_text(self.font_64, "(" + statement["type"] + ")", x+300, y-30, (0.5, 0.5, 0.5, 1))
+        self.draw_text(self.font_72, statement["text"], x+300, y+40, (1, 1, 1, 1))
 
     def render_default(self):
         self.set_position(default_bounds)
