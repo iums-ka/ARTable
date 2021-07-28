@@ -323,6 +323,7 @@ class UI:
             self.draw_rectangle((line_3_x - line_w / 2, line_3_y, line_3_x + line_w / 2, line_3_y + line_h),
                                   (153./255., 153./255., 153./255., 1))
 
+        # underline year
         ul_y1 = 2656
         ul_x1 = {2020: 2869, 2030: 3768, 2050: 4655}[active_year]
         ul_y2 = ul_y1 + 6
@@ -330,6 +331,7 @@ class UI:
 
         self.draw_rectangle((ul_x1, ul_y1, ul_x2 ,ul_y2), (1, 1, 1, 1))
 
+        # search box
         if search_data is not None:
             self.draw_text(self.font_42, search_data[0], 2192, 2480, (0, 0, 0, 1))
             self.draw_rectangle((2174, 2450, 2174 + 564, 2450 - len(search_data[2]) * 54), (1, 1, 1, 1))
@@ -339,11 +341,13 @@ class UI:
             for i in range(len(search_data[2])):
                 self.draw_text(self.font_42, search_data[2][i], 2192, 2410 - i * 54, (0, 0, 0, 1))
 
+        # statements
         if len(visible_statements) >= 1:
             self.draw_statement_gl(2896, 1360, visible_statements[0])
         if len(visible_statements) >= 2:
             self.draw_statement_gl(2896, 1840, visible_statements[1])
 
+        # tutorial
         if show_tutorial:
             self.fullscreen_composite(self.tutorial_overlay_tex)
 

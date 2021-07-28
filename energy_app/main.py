@@ -364,7 +364,6 @@ class YearListener(ArucoAreaListener):
 
 def update_table():
     search_data = (search, selected, results) if typing else None
-    start = time.time_ns()
     ui.rendergl(place_name, place_population, place_energy,
                 created_energy / place_energy, # % of needed
                 created_emission / place_emission, # % of 2018
@@ -374,9 +373,6 @@ def update_table():
                 search_data, visible_statments, active_year,
                 tutorial_visible, info_visible
                 )
-    nspf = time.time_ns() - start
-    print("Frametime =", nspf/1000000000)
-    print("^=", 1000000000/nspf, "fps")
 
 
 def reload_configs():
