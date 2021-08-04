@@ -58,7 +58,7 @@ class ARTableGL:
         tex = glGenTextures(1)
         glBindTexture(GL_TEXTURE_2D, tex)
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, self.config.table_size[0], self.config.table_size[1], 0, GL_RGB, GL_UNSIGNED_BYTE, None)
-        glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, tex, 0)
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0)
         glBindTexture(GL_TEXTURE_2D, 0)
         glViewport(0, 0, self.config.table_size[0], self.config.table_size[1])
         draw_context = glutGetWindow()

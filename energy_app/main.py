@@ -42,7 +42,7 @@ def send(text):
         print(text)
 
 def cmp(a, b):
-    return (a > b) - (a < b)
+    return bool(a > b) - bool(a < b)
 
 class OverlayListener(ArucoAreaListener):
     def reload(self):
