@@ -221,11 +221,11 @@ class MapListener(ArucoAreaListener):
         # reset update timer
         if self.update_timer is not None:
             self.update_timer.cancel()
-        self.update_timer = threading.Timer(statement_update_interval, self.auto_update_statements)
+        self.update_timer = threading.Timer(statement_update_interval, lambda: self.auto_update_statements(new_marker))
         self.update_timer.start()
 
-    def auto_update_statements(self):
-        self.update_statements(-1)
+    def auto_update_statements(self, new_marker=-1):
+        self.update_statements(new_marker)
         queue.put(None)  # call for update
 
     def get_statement(self, marker_id):
