@@ -14,6 +14,7 @@ from OpenGL.GL import *
 from OpenGL.GLUT import *
 from OpenGL.GL.ARB.framebuffer_object import *
 from OpenGL.GL.EXT.framebuffer_object import *
+from OpenGL.GL.shaders import *
 
 from artable.configuration import Configuration
 
@@ -173,7 +174,10 @@ class ARTableGL:
     def __display_function(self):
         mat = np.identity(3)
         if self.calibrated:
-            mat = np.dot(self.camera_projector_t, self.table_camera_t)
+            mat = np.dot(self.camera_table_t, self.projector_camera_t)
+            mat = np.dot(mat, np.diag([self.config.projector_resolution[0]/self.config.table_size[0],
+                                       self.config.projector_resolution[1]/self.config.table_size[1],
+                                       1]))
         input_size = self.config.projector_resolution
         if self.calibrated:
             input_size = self.config.table_size
@@ -187,22 +191,44 @@ class ARTableGL:
         glLoadIdentity()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)  # clear the screen to the color of glClearColor
         glColor(1, 1, 1, 1)
+        frag = glCreateShader(GL_FRAGMENT_SHADER)
+        vert = glCreateShader(GL_VERTEX_SHADER)
+        glShaderSource(frag, "\n".join(open("warp_shader.frag").readlines()))
+        glShaderSource(vert, "\n".join(open("warp_shader.vert").readlines()))
+        glCompileShader(frag)
+        shader_program = compileProgram(frag, vert)
+        glUseProgram(shader_program)
+        glUniformMatrix3fv(glGetUniformLocation(shader_program, "inverseHomographyMatrix"), 1, GL_FALSE, mat)
+        glUniform1f(glGetUniformLocation(shader_program, "width"), input_size[0])
+        glUniform1f(glGetUniformLocation(shader_program, "height"), input_size[1])
         glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, self.tex)
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+        glUniform1i(glGetUniformLocation(shader_program, "inputImageTexture"), 0)
         glEnable(GL_TEXTURE_2D)
-        glBegin(GL_QUADS)
-        glTexCoord2f(1., 0.)
-        warpedGlVertex2f(0., 0., mat)
-        glTexCoord2f(1., 1.)
-        warpedGlVertex2f(0., input_size[1], mat)
-        glTexCoord2f(0., 1.)
-        warpedGlVertex2f(input_size[0], input_size[1], mat)
-        glTexCoord2f(0., 0.)
-        warpedGlVertex2f(input_size[0], 0., mat)
-        glEnd()
+        vertex_attributes = [
+            -1, -1, 1., 0.,
+            -1, 1, 1., 1.,
+            1, 1, 0., 1.,
+            1, -1, 0., 0.
+        ]
+        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, vertex_attributes)
+        glEnableVertexAttribArray(0)
+        glDrawArrays(GL_QUADS, 0, 4)
+        glDisableVertexAttribArray(0)
+        # glBegin(GL_QUADS)
+        # glTexCoord2f(1., 0.)
+        # glVertex2f(0., 0.)
+        # glTexCoord2f(1., 1.)
+        # glVertex2f(0., input_size[1])
+        # glTexCoord2f(0., 1.)
+        # glVertex2f(input_size[0], input_size[1])
+        # glTexCoord2f(0., 0.)
+        # glVertex2f(input_size[0], 0.)
+        # glEnd()
         glDisable(GL_TEXTURE_2D)
         glBindTexture(GL_TEXTURE_2D, 0)
+        glUseProgram(0)
         glFlush()
         glutSwapBuffers()
 
