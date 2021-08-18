@@ -174,8 +174,10 @@ class ARTableGL:
     def __display_function(self):
         mat = np.identity(3)
         if self.calibrated:
-            #mat = np.dot(self.camera_projector_t, self.table_camera_t)
             mat = np.dot(self.camera_table_t, self.projector_camera_t)
+            mat = np.dot(mat, np.diag([self.config.projector_resolution[0]/self.config.table_size[0],
+                                       self.config.projector_resolution[1]/self.config.table_size[1],
+                                       1]))
         input_size = self.config.projector_resolution
         if self.calibrated:
             input_size = self.config.table_size
