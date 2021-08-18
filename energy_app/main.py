@@ -1,7 +1,6 @@
 import json
 import random
 import threading
-import time
 
 import pynput
 from pynput.keyboard import HotKey, Listener
