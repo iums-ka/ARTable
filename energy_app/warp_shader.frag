@@ -33,6 +33,4 @@ void main()
    } else {
        gl_FragColor = vec4(0.0,0.0,0.0,0.0);
    }
-   //gl_FragColor = texture2D(inputImageTexture, textureCoordinate);
-   //gl_FragColor = vec4(coords,0.0,1.0);
 }
