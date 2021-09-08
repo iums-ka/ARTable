@@ -1,5 +1,5 @@
 {
-  "keyboard": 33,
+  "keyboard": 35,
   "places" : [
     {
 
@@ -16,6 +16,86 @@
     "energy": 3852173.6,
     "emissions": 3994450.21341458
   },
+
+    {
+
+      "marker": 28,
+      "name": "Baden-W\u00fcrttemberg",
+      "bounds": [
+        7.5587,
+        47.5438,
+        10.4979,
+        49.7933
+      ],
+      "population": 10739000,
+      "nuts3": "DE1",
+      "energy": 79468600,
+      "emissions": 3994450.21341458
+    },
+
+    {
+
+      "marker": 29,
+      "name": "Stadtkreis Mannheim",
+      "bounds": [
+        8.414341,
+        49.411041,
+        8.589032,
+        49.589804
+      ],
+      "population": 310658,
+      "nuts3": "DE126",
+      "energy": 2003351.68,
+      "emissions": 2077343.69648358
+    },
+
+    {
+
+      "marker": 30,
+      "name": "Stadtkreis Freiburg im Breisgau",
+      "bounds": [
+        7.663138,
+        47.903392,
+        7.929831,
+        48.070346
+      ],
+      "population": 231195,
+      "nuts3": "DE131",
+      "energy": 1398230.24,
+      "emissions": 1449872.63309492
+    },
+
+    {
+
+      "marker": 32,
+      "name": "Stadtkreis Heidelberg",
+      "bounds": [
+        8.573125,
+        49.352379,
+        8.793216,
+        49.459332
+      ],
+      "population": 161485,
+      "nuts3": "DE125",
+      "energy": 930492.64,
+      "emissions": 964859.559919287
+    },
+
+    {
+
+      "marker": 31,
+      "name": "Stadtkreis Ulm",
+      "bounds": [
+        9.844692,
+        48.30958,
+        10.042414,
+        48.4685
+      ],
+      "population": 126790,
+      "nuts3": "DE144",
+      "energy": 783855.6,
+      "emissions": 812806.610975739
+    },
 
     {
       "marker": 5,
