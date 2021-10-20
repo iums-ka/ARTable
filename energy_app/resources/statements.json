@@ -3,33 +3,27 @@
     "economist": [
       {
         "temper": "positive",
-        "text": "Die Installation ist auf bereits bebauten Flächen möglich."
+        "text": "Die Installation ist auf bereits bebauten Flächen \nmöglich."
       },
       {
         "temper": "positive",
-        "text": "Der Ausbau der Photovoltaik trägt wesentlich zur Dezen-\ntralisierung und damit zur Demokratisierung des Ener-\ngieversorgungsmarktes bei."
+        "text": "Der Ausbau der Photovoltaik trägt wesentlich zur \nDezentralisierung und damit zur Demokratisierung des \nEnergieversorgungsmarktes bei."
       },
       {
         "temper": "positive",
-        "text": "In einem durchschnittlichen Einfamilienhaus armotisiert \nsich eine PV-Anlage in der Regel nach 10-12 Jahren."
+        "text": "In einem durchschnittlichen Einfamilienhaus armoti- \nsiert sich eine PV-Anlage in der Regel nach 10-12 \nJahren."
       }
     ],
     "scientist": [
-      {
-        "temper": "positive",
-        "text": "Die Stromproduktion durch PV ist erneuerbar und \numweltfreundlich. (Für die Erzeugung einer kWh Strom \nwerden z.B. bei einem Kohlekraftwerk mehr als 26 Mal so \nviel CO2 ausgestossen)."
-      },
+
       {
         "temper": "negative",
-        "text": "Solaranlagen sind Tageszeit-, Wetter- und Standortab-\nhängig."
+        "text": "Solaranlagen sind Tageszeit-, Wetter- und Standortab- \nhängig."
       },
+
       {
         "temper": "positive",
-        "text": "Die Technik wird immer ausgereifter und die Strom-\nproduktion effizienter."
-      },
-      {
-        "temper": "positive",
-        "text": "PV-Anlagen erzeugen kaum Umwelt- und Nachhaltig-\nkeitskosten."
+        "text": "PV-Anlagen erzeugen kaum Umwelt- und Nachhaltig- \nkeitskosten."
       }
     ],
     "conservationist": [
@@ -39,11 +33,11 @@
       },
       {
         "temper": "neutral",
-        "text": "Nur auf Flächen, die vorher intensiv genutzt wurden, \nist durch den Bau von Solar-Freiflächenanlagen mit \nVerbesserungen für die Natur zu rechnen."
+        "text": "Nur auf Flächen, die vorher intensiv genutzt \nwurden, ist durch den Bau von Solar-Freiflächenanlagen \nmit Verbesserungen für die Natur zu rechnen."
       },
       {
         "temper": "negative",
-        "text": "Freiflächen-Photovoltaik beeinträchtig die \nFlora und Fauna und zerstört Lebensräume."
+        "text": "Freiflächen-Photovoltaik kann die Flora und Fauna \nbeeinträchtigen."
       }
     ]
   },
@@ -52,27 +46,36 @@
       {
         "temper": "negative",
         "text": "Windräder können das Landschaftsbild beeinträchtigen."
+      },
+      {
+        "temper": "positive",
+        "text": "Windkraft ist günstig, reichlich vorhanden und \numweltfreundlich."
       }
     ],
     "scientist": [
       {
         "temper": "neutral",
-        "text": "Ein Windrad spart etwa 1000 Mal mehr CO2 ein, \nals die zum Bau benötigte Waldfläche binden könnte."
+        "text": "Von allen Formen der Energiegewinnung benötigen \nWindräder die geringste Fläche. "
       },
       {
         "temper": "negative",
-        "text": "Windräder sind Wetter- und Standortabhängig."
+        "text": "Windräder sind Wetter- und Standortabhängig und \nder Wind nicht immer am richtigen Ort in der richtigen \nStärke vorhanden."
       },
       {
         "temper": "positive",
         "text": "Windräder können das ganze Jahr über sowie Tag und \nNacht Strom erzeugen."
-      }
-    ],
-    "conservationist": [
+      },
       {
         "temper": "negative",
-        "text": "Windräder gefährden Vögel, z.B den seltenen Rotmilan."
+        "text": "Wind lässt sich nicht direkt speichern und muss vor \nOrt in elektrischen Strom umgewandelt werden."
       },
+      {
+        "temper": "negative",
+        "text": "Man bräuchte hunderte Windräder um die gleiche Leistung \neines Kohle- oder Atomkraftwerks zu erzeugen."
+      }
+
+    ],
+    "conservationist": [
       {
         "temper": "negative",
         "text": "Für den Bau muss in der Regel Wald gerodet werden, \nder Biotop für diverse Tiere ist."
@@ -82,26 +85,18 @@
   "water": {
     "economist": [
       {
-        "temper": "neutral",
-        "text": "Bereits ein kleines Wasserkraftwerk kann verlässlich \nzwei oder drei Dörfer das ganze Jahr mit Strom \nversorgen. "
+        "temper": "positive",
+        "text": "Wasserkraftanlagen haben einen geringen Wartungsaufwand \nund eine lange Lebensdauer. Deswegen sind sie \nbesonders gut für den Einsatz im kleinen Maßstab geeignet."
       },
       {
-        "temper": "neutral",
-        "text": "Die Stromerzeugungskosten der Wasserkraft schwanken \nstark. Je größer die vorhandene Wassermasse und das \nWassergefälle sind, desto günstiger wird die Erzeugung."
-      },
-      {
-        "temper": "neutral",
-        "text": "Viele stillgelegte Wehre können re-aktiviert werden. \nDas spart Kosten, die bei einem Neuausbau anfielen."
+        "temper": "positive",
+        "text": "Wasserkraftanlagen sind eine gute Ergänzung für die \ndezentrale umweltfreundliche Stromversorgung und \nspart Kosten für den Leitungsausbau. Die Verteilungskosten \nsind geringer und eine große Versorgungssicherheit ist gewährleistet."
       }
     ],
     "scientist": [
       {
         "temper": "neutral",
-        "text": "Strom aus Kleinwasserkraftwerken ist zwar etwas teurer, \nbietet aber eine gute Ergänzung für die dezentrale \numweltfreundliche Stromversorgung und spart Kosten \nfür den Leitungsausbau und umstrittene Umsiedlungen \nvon ganzen Dörfern."
-      },
-      {
-        "temper": "neutral",
-        "text": "Aus technischer Sicht bietet der Schwallbetrieb dieser \nKraftwerke die Möglichkeit spontaner Regulierungen \nund damit flexibler Leistungsanpassung. "
+        "text": "Der Schwallbetrieb dieser Kraftwerke die Möglichkeit \nspontaner Regulierungen und damit flexibler Leistungsanpassung. "
       },
       {
         "temper": "negative",
@@ -111,10 +106,6 @@
     "conservationist": [
       {
         "temper": "negative",
-        "text": "Die (Wander-)Fischbevölkerung in den Flüssen leidet \nunter diesen Wasserkraftwerken. "
-      },
-      {
-        "temper": "negative",
         "text": "Wasserkraftwerke können leicht das Ökosystem eines \nFlusses oder einer ganzen Landschaft verändern."
       }
     ]
@@ -122,8 +113,8 @@
   "bio": {
     "economist": [
       {
-        "temper": "negative",
-        "text": "Biomasseanlagen beeinträchtigen das Landschaftbild"
+        "temper": "positive",
+        "text": "Biologische Rohstoffe wachsen relativ schnell \nnach, wodurch sich selbst eine hohe Nachfrage befriedigen \nlässt."
       },
       {
         "temper": "negative",
@@ -131,7 +122,7 @@
       },
       {
         "temper": "neutral",
-        "text": "Biogasanlagen erhöhen die Wirtschaftskraft von länd-\nlichen Kommunen durch die Einnahme von Gewerbe-\nsteuern, sowie durch den Erhalt der Wertschöpfung in \nder Region und vielerlei andere Wertschöpfungseffekte."
+        "text": "Biogasanlagen erhöhen die Wirtschaftskraft von \nländlichen Kommunen durch die Einnahme von Gewerbe-\nsteuern, sowie durch den Erhalt der Wertschöpfung in \nder Region und vielerlei andere Wertschöpfungseffekte."
       }
     ],
     "scientist": [
@@ -156,6 +147,10 @@
       {
         "temper": "negative",
         "text": "Biomasse führt zum vermehrten Anbau von Mono-\nkulturen, welche mittelfristig die Böden schädigen."
+      },
+      {
+        "temper": "neutral",
+        "text": "Biogas besitzt eine neutrale CO2-Bilanz, verursacht \njedoch deutlich mehr als die anderen erneuerbren \nEnergieträger."
       }
     ]
   },
@@ -174,36 +169,35 @@
         "temper": "negative",
         "text": "Deutschland ist auf Importe angewiesen - aus \nzum Teil politisch schwierigen Ländern."
       }
-    ]
+    ],
 
+    "scientist": [
+      {
+        "temper": "positive",
+        "text": "Erdgas besitzt eine hohe Leistungsdichte und \nist mit Abstand der fossile Energieträger, \nder die wenigsten Umweltemissionen produziert. "
+      }
+    ]
   },
   "atom": {
     "economist": [
-      {
-        "temper": "negative",
-        "text": "Kernkraftwerke beeinträchtigen das Landschaftbild"
-      },
+
       {
         "temper": "negative",
         "text": "Es besteht immer ein geringes Restrisiko von \nKomplikationen im Kraftwerk, die im schlimmsten Fall zu \nKatastrophen führen können."
       },
       {
         "temper": "positive",
-        "text": "Kernkraftwerke können einen großen Teil der Grundlast \nabdecken. Denn die Stromnnachfrage muss auch gedeckt \nsein, wenn keine Sonne scheint und kein Wind weht."
+        "text": "Kernkraftwerke können einen großen Teil der Grundlast \nabdecken."
       },
       {
         "temper": "neutral",
-        "text": "Beim Uran ist Deutschland zu hundert Prozent auf \nImporte angewiesen. In einigen Jahrzehnten können \nEngpässe entstehen."
-      },
-      {
-        "temper": "positive",
-        "text": "Die relativ günstigen Stromgewinnungskosten"
+        "text": "Kernbrennstoffe wie Uran stehen ausreichend zur \nVerfügung."
       }
     ],
     "scientist": [
       {
         "temper": "positive",
-        "text": "Kernenergie verursacht geringe Emissionen und kann \nin dieser Hinsicht mit den erneuerbaren Energieträgern \nmithalten."
+        "text": "Kernenergie verursacht geringe Emissionen und \nkann in dieser Hinsicht mit den erneuerbaren Energie-\nträgern mithalten."
       },
       {
         "temper": "negative",
@@ -212,8 +206,8 @@
     ],
     "conservationist": [
       {
-        "temper": "positive",
-        "text": "Kernenergie beansprucht vergleichsweise wenig \nFläche an einer geringen Anzahl an Standorten."
+        "temper": "negative",
+        "text": "Das für die Kühlung nicht benötigte, aufgewärmte \nWasser wird in Seen und Flüsse zurückgeleitet und \nkann das biologische Gleichgewicht im Wasser stören. "
       },
       {
         "temper": "negative",
@@ -224,34 +218,28 @@
   "coal": {
     "economist": [
       {
-        "temper": "negative",
-        "text": "Kohlekraftwerke beeinträchtigen das Landschaftsbild."
+        "temper": "positive",
+        "text": "Deutschland besitzt große Steinkohlevorkommen und \nist daher nicht von einem Import aus anderen Ländern \nabhängig. "
       },
-      {
-        "temper": "negative",
-        "text": "Kohlekraftwerke verunreinigen die Luft."
-      },
+
       {
         "temper": "positive",
         "text": "Kohlekraftwerke sind gut geeignet die Grundlast \nabzudecken."
       },
       {
         "temper": "positive",
-        "text": "Kohlekraftwerke können das ganze Jahr, rund um \ndie Uhr und bei jedem Wetter Strom erzeugen."
-      },
-      {
-        "temper": "positive",
-        "text": "Deutschland besitzt große Steinkohlevorkommen und \nist daher nicht auf einen Import aus anderen Ländern \nabhängig. Dies macht den Rohstoff und die erzeugte \nEnergie günstig."
+        "text": "Kohlekraftwerke können das ganze Jahr, rund um \ndie Uhr Strom erzeugen."
       }
+
     ],
     "scientist": [
       {
         "temper": "negative",
-        "text": "Da Kohle eine geringe Dichte besitzt, muss viel Kohle \nverbrannt werden, um verhältnismäßig wenig Strom \nzu erzeugen."
+        "text": "Kohlekraftwerke sind für etwa 30% der \nKohlendioxidemissionen in Deutschland verantwortlich."
       },
       {
-        "temper": "neutral",
-        "text": "Die Vorräte reichen laut aktuellem Stand der \nWissenschaft noch ca. 200 Jahre. Das macht die Kohle zu \neinem der am längsten lebenden fossilen Energieträgern."
+        "temper": "negative",
+        "text": "Kohle besitzt eine geringe Dichte. Dadurch \nmuss viel Kohle verbrannt werden, um verhältnismäßig \nwenig Strom zu erzeugen."
       }
     ],
     "conservationist": [

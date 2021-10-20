@@ -87,7 +87,7 @@ class UI:
             self.data_cache["water"] = self.water_potential
             self.data_cache.close()
         print("Loading textures...")
-        self.static_layer = Image.open('resources/static-layer.png')
+        self.static_layer = Image.open('resources/static-layer3.png')
         self.static_layer_tex = gen_tex(self.static_layer)
         self.tutorial_overlay = Image.open('resources/tutorial-overlay.png')
         self.tutorial_overlay_tex = gen_tex(self.tutorial_overlay)

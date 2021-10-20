@@ -123,7 +123,7 @@ class MapListener(ArucoAreaListener):
         self.set_ids(ids)
 
     def __init__(self, area, ar, dynamic_ui):
-        super().__init__(area, delta=10, time_threshold=2)  # reaction tangibles
+        super().__init__(area, delta=10, time_threshold=3)  # reaction tangibles
         self.table = ar
         self.ui = dynamic_ui
         self.plants = {}
