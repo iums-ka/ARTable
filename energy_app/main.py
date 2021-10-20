@@ -132,16 +132,12 @@ class MapListener(ArucoAreaListener):
         self.reload()
 
     def on_enter(self, marker_id, position):
-        coords = self.table_pos_to_geocode(position)
-        send("MARKER:enter:" + self.plants[marker_id]["name"] + ":" + str(coords[0]) + ":" + str(coords[1]))
-        self.active_plants[marker_id] = self.table.table_to_image_coords(position)
+        self.do_marker_update(marker_id, position, "enter")
         self.update_statements(marker_id)
         self.sum_and_update()
 
     def on_move(self, marker_id, last_position, position):
-        coords = self.table_pos_to_geocode(position)
-        send("MARKER:move:" + self.plants[marker_id]["name"] + ":" + str(coords[0]) + ":" + str(coords[1]))
-        self.active_plants[marker_id] = self.table.table_to_image_coords(position)
+        self.do_marker_update(marker_id, position, "move")
         self.sum_and_update()
 
     def on_leave(self, marker_id, last_position):
@@ -242,6 +238,11 @@ class MapListener(ArucoAreaListener):
             statement["type"] = plant_type
         return statement
 
+    def do_marker_update(self, marker_id, position, update_type):
+        coords = self.table_pos_to_geocode(position)
+        send("MARKER:" + update_type + ":" + self.plants[marker_id]["name"] + ":" + str(coords[0]) + ":" + str(coords[1]))
+        img_pos = self.table.table_to_image_coords(position)
+        self.active_plants[marker_id] = img_pos
 
 class PlaceListener(ArucoAreaListener):
     def reload(self):
