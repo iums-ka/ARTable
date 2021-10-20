@@ -119,6 +119,7 @@ class UI:
 
     def render(self, place,
                population, energy_consumption,
+               show_popup, popup_position, popup_dataline, popup_text,
                coverage, emission, costings,
                coverage_goal, emission_goal, costings_goal,
                coverage_sign, emission_sign, costings_sign,
@@ -172,7 +173,6 @@ class UI:
         text_x = 3500
         font = ImageFont.truetype('resources/MyriadPro-Regular.otf', text_s)
         draw_screen.text((text_x, text_1), place, 'white', font)
-        import locale
         locale.setlocale(locale.LC_ALL, '')
         draw_screen.text((text_x, text_2), "{:n} Menschen".format(int(population)), 'white', font)
         draw_screen.text((text_x, text_3), "{:n} MWh".format(int(energy_consumption)), 'white', font)
@@ -215,6 +215,16 @@ class UI:
             self.draw_statement(draw_screen, screen, 2896, 1360, visible_statements[0])
         if len(visible_statements) >= 2:
             self.draw_statement(draw_screen, screen, 2896, 1840, visible_statements[1])
+
+        if show_popup:
+            popup_displace = (100, -120)
+            font = ImageFont.truetype('resources/MyriadPro-Regular.otf', 64)
+            ppx, ppy = popup_position[0] + popup_displace[0], popup_position[1] + popup_displace[1]
+            draw_screen.rectangle((ppx, ppy, ppx + 820, ppy + 340 + 72 * popup_text.count("\n")),
+                                  (0, 0, 0, 178))
+            draw_screen.text((ppx + 10, ppy + 10), popup_dataline, 'white', font)
+            draw_screen.text((ppx + 10, ppy + 272), popup_text, 'white', font)
+
         if show_tutorial:
             screen.alpha_composite(self.tutorial_overlay)
         return screen
@@ -242,6 +252,7 @@ class UI:
 
     def rendergl(self, place,
                  population, energy_consumption,
+                 show_popup, popup_position, popup_dataline, popup_text,
                  coverage, emission, costings,
                  coverage_goal, emission_goal, costings_goal,
                  coverage_sign, emission_sign, costings_sign,
@@ -337,7 +348,7 @@ class UI:
             self.draw_rectangle((2174, 2450, 2174 + 564, 2450 - len(search_data[2]) * 54), (1, 1, 1, 1))
             if search_data[1] != -1:
                 self.draw_rectangle((2174, 2450 - search_data[1] * 54, 2174 + 564, 2450 - search_data[1] * 54 - 54),
-                                      (100./255., 100./255., 255./255., 1))
+                                    (100./255., 100./255., 255./255., 1))
             for i in range(len(search_data[2])):
                 self.draw_text(self.font_42, search_data[2][i], 2192, 2410 - i * 54, (0, 0, 0, 1))
 
@@ -346,6 +357,15 @@ class UI:
             self.draw_statement_gl(2896, 1360, visible_statements[0])
         if len(visible_statements) >= 2:
             self.draw_statement_gl(2896, 1840, visible_statements[1])
+
+        # plant info popup
+        if show_popup:
+            popup_displace = (100, -120)
+            ppx, ppy = popup_position[0] + popup_displace[0], popup_position[1] + popup_displace[1]
+            self.draw_rectangle((ppx, ppy, ppx + 820, ppy + 340 + 72 * popup_text.count("\n")),
+                                (0, 0, 0, 0.7))
+            self.draw_text(self.font_64, popup_dataline, ppx + 10, ppy + 10, (1, 1, 1, 1))
+            self.draw_text(self.font_64, popup_text, ppx + 10, ppy + 272, (1, 1, 1, 1))
 
         # tutorial
         if show_tutorial:
@@ -366,8 +386,11 @@ class UI:
             self.draw_text(self.font_70, "«", bar_x + bar_w * percentage + 5, bar_y - bar_h / 2 + 70 / 2, bar_c)
 
     def draw_rectangle(self, bounds, color):
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         glColor(color)
         glRectd(*bounds)
+        glDisable(GL_BLEND)
 
     def draw_statement(self, draw_screen, screen, x, y, statement):
         icon = Image.open("resources/stakeholders/{}_{}.png".format(statement["from"], statement["temper"]))

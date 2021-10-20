@@ -1,4 +1,5 @@
 import json
+import locale
 import random
 import threading
 
@@ -113,6 +114,7 @@ class MapListener(ArucoAreaListener):
         config = json.load(open("resources/plant_types.json", mode="r", encoding="utf-8"))
         self.plant_type_names = json.load(open("resources/plant_type_names.json", mode="r", encoding="utf-8"))
         self.statements = json.load(open("resources/statements.json", mode="r", encoding="utf-8"))
+        self.coverage_texts = json.load(open("resources/coverage_text.json", mode="r", encoding="utf-8"))
         self.plants = {}
         ids = []
         for plant in config["types"]:
@@ -128,7 +130,9 @@ class MapListener(ArucoAreaListener):
         self.statements = {}
         self.active_plants = {}
         self.plant_type_names = {}
+        self.coverage_texts = []
         self.update_timer = None
+        self.popup_shown_for = -1
         self.reload()
 
     def on_enter(self, marker_id, position):
@@ -141,8 +145,12 @@ class MapListener(ArucoAreaListener):
         self.sum_and_update()
 
     def on_leave(self, marker_id, last_position):
+        global show_popup
         coords = self.table_pos_to_geocode(last_position)
         send("MARKER:leave:" + self.plants[marker_id]["name"] + ":" + str(coords[0]) + ":" + str(coords[1]))
+        if self.popup_shown_for == marker_id:
+            show_popup = False
+            self.popup_shown_for = -1
         self.active_plants.pop(marker_id)
         self.update_statements()
         self.sum_and_update()
@@ -238,11 +246,65 @@ class MapListener(ArucoAreaListener):
             statement["type"] = plant_type
         return statement
 
+    def get_coverage_text(self, marker_id):
+        plant_possible_energy = self.get_plant_raw_data(marker_id)[0]
+        if plant_possible_energy is None:
+            return None
+        best_match = 0
+        best_coverage_text = 0
+        for coverage_text in self.coverage_texts:
+            from_mwh = coverage_text['from_megawatthours']
+            if best_match < from_mwh < plant_possible_energy:
+                best_match = from_mwh
+                best_coverage_text = coverage_text['text']
+        return best_coverage_text
+
+    def get_data_line(self, marker_id):
+        plant_possible_energy, plant_emission, plant_cost = self.get_plant_raw_data(marker_id)
+        if plant_possible_energy is None:
+            return None
+        locale.setlocale(locale.LC_ALL, '')
+        return "{0:.5n} MW\n{1:.3n} ct/kWh\n{2:.4n} t(CO2)/kWh".format(plant_possible_energy/(365*24),
+                                                           plant_cost/plant_possible_energy/10,
+                                                           plant_emission/plant_possible_energy)
+
     def do_marker_update(self, marker_id, position, update_type):
+        global show_popup, popup_position, popup_dataline, popup_text
         coords = self.table_pos_to_geocode(position)
         send("MARKER:" + update_type + ":" + self.plants[marker_id]["name"] + ":" + str(coords[0]) + ":" + str(coords[1]))
         img_pos = self.table.table_to_image_coords(position)
         self.active_plants[marker_id] = img_pos
+        popup_dataline, popup_text = self.get_data_line(marker_id), self.get_coverage_text(marker_id)
+        show_popup, popup_position = popup_dataline is not None, (img_pos[0], img_pos[1])
+        if show_popup:
+            self.popup_shown_for = marker_id
+        # optional ausblenden nach 20 sekunden?
+
+    def get_plant_raw_data(self, marker_id):
+
+        plant = self.plants[marker_id]
+        potential = self.get_potential(plant["type"], self.active_plants[marker_id])
+        if potential is None:
+            return None, None, None
+        plant_possible_energy = eval(plant["energy_formula"], {
+            'potential': potential,
+            'needed': place_energy,
+            'population': place_population
+        })
+        plant_emission = eval(plant["emission_formula"], {
+            'potential': potential,
+            'needed': place_energy,
+            'population': place_population,
+            'power': plant_possible_energy
+        })
+        plant_cost = eval(plant["cost_formula"], {
+            'potential': potential,
+            'needed': place_energy,
+            'population': place_population,
+            'power': plant_possible_energy
+        })
+        return plant_possible_energy, plant_emission, plant_cost
+
 
 class PlaceListener(ArucoAreaListener):
     def reload(self):
@@ -365,6 +427,7 @@ class YearListener(ArucoAreaListener):
 def update_table():
     search_data = (search, selected, results) if typing else None
     ui.rendergl(place_name, place_population, place_energy,
+                show_popup, popup_position, popup_dataline, popup_text,
                 created_energy / place_energy, # % of needed
                 created_emission / place_emission, # % of 2018
                 min(created_cost / (place_population * 1000), 1), # [0,1]
@@ -423,6 +486,7 @@ if __name__ == '__main__':
     created_cost = 0
     coverage_goal, emission_goal, cost_goal = -1, -1, -1
     coverage_sign, emission_sign, cost_sign = 0, 0, 0
+    show_popup, popup_position, popup_dataline, popup_text = False, (0, 0), "", ""
     active_year = 2020
     update_table()
     aruco = Aruco(marker_dict="DICT_4X4_250")
