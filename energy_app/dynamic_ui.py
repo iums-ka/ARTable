@@ -89,6 +89,12 @@ class UI:
         print("Loading textures...")
         self.static_layer = Image.open('resources/static-layer3.png')
         self.static_layer_tex = gen_tex(self.static_layer)
+        self.tutorial = []
+        self.tutorial_tex = []
+        for i in range(5):
+            img = Image.open('resources/tutorial-page-' + str(i) + '.png')
+            self.tutorial.append(img)
+            self.tutorial_tex.append(gen_tex(img))
         self.tutorial_overlay = Image.open('resources/tutorial-overlay.png')
         self.tutorial_overlay_tex = gen_tex(self.tutorial_overlay)
         self.energieatlas_info = Image.open('resources/energieatlas-info.png')
@@ -124,7 +130,9 @@ class UI:
                coverage_goal, emission_goal, costings_goal,
                coverage_sign, emission_sign, costings_sign,
                search_data, visible_statements, active_year,
-               show_tutorial, show_info):
+               show_tutorial, tutorial_page, show_info):
+        if show_tutorial:
+            return self.tutorial[tutorial_page]
         if show_info:
             return self.energieatlas_info
         # black background
@@ -225,8 +233,6 @@ class UI:
             draw_screen.text((ppx + 10, ppy + 10), popup_dataline, 'white', font)
             draw_screen.text((ppx + 10, ppy + 272), popup_text, 'white', font)
 
-        if show_tutorial:
-            screen.alpha_composite(self.tutorial_overlay)
         return screen
 
     def update_map(self):
@@ -257,7 +263,7 @@ class UI:
                  coverage_goal, emission_goal, costings_goal,
                  coverage_sign, emission_sign, costings_sign,
                  search_data, visible_statements, active_year,
-                 show_tutorial, show_info):
+                 show_tutorial, tutorial_page, show_info):
         # setup
         w = glutGetWindow()
         glutSetWindow(self.table.draw_context)
@@ -271,7 +277,16 @@ class UI:
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
 
-        # drawing
+        # tutorial
+        if show_tutorial:
+            self.fullscreen_composite(self.tutorial_tex[tutorial_page])
+            glFlush()
+            glBindFramebuffer(GL_FRAMEBUFFER, 0)
+            glutSetWindow(w)
+            self.table.update_display()
+            return
+
+        # info
         if show_info:
             self.fullscreen_composite(self.energieatlas_info_tex)
             glFlush()
@@ -366,10 +381,6 @@ class UI:
                                 (0, 0, 0, 0.7))
             self.draw_text(self.font_64, popup_dataline, ppx + 10, ppy + 10, (1, 1, 1, 1))
             self.draw_text(self.font_64, popup_text, ppx + 10, ppy + 272, (1, 1, 1, 1))
-
-        # tutorial
-        if show_tutorial:
-            self.fullscreen_composite(self.tutorial_overlay_tex)
 
         # finish
         glFlush()

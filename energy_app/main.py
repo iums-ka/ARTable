@@ -83,6 +83,38 @@ class OverlayListener(ArucoAreaListener):
         queue.put(None)  # call for update
 
 
+class TutorialListener(ArucoAreaListener):
+    def reload(self):
+        ids = []
+        for i in range(100):
+            ids.append(i)
+        self.set_ids(ids)
+
+    def __init__(self, area, action_id):
+        super().__init__(area, delta=10, time_threshold=2)
+        self.update_timer = None
+        self.action_id = action_id
+        self.reload()
+
+    def on_enter(self, marker_id, position):
+        global tutorial_visible, tutorial_page
+        if self.action_id == -1:
+            print("end tutorial")
+            tutorial_visible = False
+            switch_to_main()
+            return
+        print("show tutorial page", self.action_id)
+        tutorial_visible = True
+        tutorial_page = self.action_id
+        queue.put(None)
+
+    def on_move(self, marker_id, last_position, position):
+        pass
+
+    def on_leave(self, marker_id, last_position):
+        pass
+
+
 class InfoListener(ArucoAreaListener):
     def reload(self):
         marker_id = info_marker
@@ -433,13 +465,12 @@ def update_table():
                 coverage_goal, emission_goal, cost_goal, # [0,1] u {-1}
                 coverage_sign, emission_sign, cost_sign, # {-1, 0, 1}
                 search_data, visible_statments, active_year,
-                tutorial_visible, info_visible
+                tutorial_visible, tutorial_page, info_visible
                 )
 
 
 def reload_configs():
     map_listener.reload()
-    overlay_listener.reload()
     info_listener.reload()
     place_listener.reload()
     year_2020_listener.reload()
@@ -447,6 +478,41 @@ def reload_configs():
     year_2050_listener.reload()
     place_provider.reload()
     print("Reloaded.")
+
+
+def switch_to_tutorial():
+    aruco.remove_listener(map_listener)
+    aruco.remove_listener(place_listener)
+    aruco.remove_listener(year_2020_listener)
+    aruco.remove_listener(year_2030_listener)
+    aruco.remove_listener(year_2050_listener)
+    aruco.remove_listener(info_listener)
+
+    aruco.add_listener(tutorial_listener_0)
+    aruco.add_listener(tutorial_listener_1)
+    aruco.add_listener(tutorial_listener_2)
+    aruco.add_listener(tutorial_listener_3)
+    aruco.add_listener(tutorial_listener_4)
+    aruco.add_listener(tutorial_listener_s)
+    queue.put(None)
+
+
+def switch_to_main():
+    aruco.remove_listener(tutorial_listener_0)
+    aruco.remove_listener(tutorial_listener_1)
+    aruco.remove_listener(tutorial_listener_2)
+    aruco.remove_listener(tutorial_listener_3)
+    aruco.remove_listener(tutorial_listener_4)
+    aruco.remove_listener(tutorial_listener_s)
+
+    aruco.add_listener(map_listener)
+    aruco.add_listener(place_listener)
+    aruco.add_listener(year_2020_listener)
+    aruco.add_listener(year_2030_listener)
+    aruco.add_listener(year_2050_listener)
+    aruco.add_listener(info_listener)
+    queue.put(None)
+    threading.Timer(10, switch_to_tutorial).start()  # todo when to reset?
 
 
 def for_canonical(f):
@@ -480,6 +546,7 @@ if __name__ == '__main__':
     place_energy = place_data["energy"]
     bounds = place_data["bounds"]
     ui.set_position(bounds)
+    tutorial_page = 0
     created_energy = 0
     created_emission = 0
     created_cost = 0
@@ -492,8 +559,12 @@ if __name__ == '__main__':
     table.add_plugin(aruco)
     map_listener = MapListener(table.image_to_table_coords(ui.get_map_interaction_area()), table, ui)
     aruco.add_listener(map_listener)
-    overlay_listener = OverlayListener(table.image_to_table_coords(ui.get_map_interaction_area()))
-    aruco.add_listener(overlay_listener)
+    tutorial_listener_0 = TutorialListener(table.image_to_table_coords(((3483, 1615), (3483 + 200, 1615 + 200))), 0)
+    tutorial_listener_1 = TutorialListener(table.image_to_table_coords(((3483, 434), (3483 + 200, 434 + 200))), 1)
+    tutorial_listener_2 = TutorialListener(table.image_to_table_coords(((3483, 729), (3483 + 200, 729 + 200))), 2)
+    tutorial_listener_3 = TutorialListener(table.image_to_table_coords(((3483, 1024), (3483 + 200, 1024 + 200))), 3)
+    tutorial_listener_4 = TutorialListener(table.image_to_table_coords(((3483, 1320), (3483 + 200, 1320 + 200))), 4)
+    tutorial_listener_s = TutorialListener(table.image_to_table_coords(((3483, 2306), (3483 + 200, 2306 + 200))), -1)
     place_listener = PlaceListener(table.image_to_table_coords(ui.get_place_selection_area()), table, ui)
     aruco.add_listener(place_listener)
     year_2020_listener = YearListener(table.image_to_table_coords(ui.get_2020_area()), table, ui, 2020)
@@ -508,6 +579,7 @@ if __name__ == '__main__':
     year_2020_listener.set_goals()
     table.start()
     send("SYSTEM:running")
+    switch_to_tutorial()
     while True:
         queue.get(block=True)
         update_table()
