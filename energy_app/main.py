@@ -161,8 +161,7 @@ class MapListener(ArucoAreaListener):
     def sum_and_update(self):
         global created_energy, created_emission, created_cost, place_energy, place_population, \
                coverage_sign, emission_sign, cost_sign
-        old_created_energy, old_created_emission, old_created_cost = created_energy, created_emission, created_cost
-        created_energy, created_emission, created_cost = 0, 0, 0
+        new_created_energy, new_created_emission, new_created_cost = 0, 0, 0
         for current_plant_type in (
         "water", "wind", "solar", "bio", "gas", "atom", "coal"):  # prioritization #gas hinzugefügt
             for marker_id in self.active_plants.keys():
@@ -177,7 +176,7 @@ class MapListener(ArucoAreaListener):
                     'needed': place_energy,
                     'population': place_population
                 })
-                plant_energy = plant_possible_energy + min(place_energy - (created_energy + plant_possible_energy), 0)
+                plant_energy = plant_possible_energy + min(place_energy - (new_created_energy + plant_possible_energy), 0)
                 plant_emission = eval(plant["emission_formula"], {
                     'potential': potential,
                     'needed': place_energy,
@@ -190,13 +189,13 @@ class MapListener(ArucoAreaListener):
                     'population': place_population,
                     'power': plant_energy
                 })
-                created_energy += plant_energy
-                created_emission += plant_emission
-                created_cost += plant_cost
-        coverage_sign, emission_sign, cost_sign = cmp(created_energy, old_created_energy), \
-                                                  cmp(created_emission, old_created_emission), \
-                                                  cmp(created_cost, old_created_cost), \
-
+                new_created_energy += plant_energy
+                new_created_emission += plant_emission
+                new_created_cost += plant_cost
+        coverage_sign, emission_sign, cost_sign = cmp(new_created_energy, created_energy), \
+                                                  cmp(new_created_emission, created_emission), \
+                                                  cmp(new_created_cost, created_cost)
+        created_energy, created_emission, created_cost = new_created_energy, new_created_emission, new_created_cost
         queue.put(None)  # call for update
 
     def get_potential(self, plant_type, position):
@@ -251,7 +250,7 @@ class MapListener(ArucoAreaListener):
         if plant_possible_energy is None:
             return None
         best_match = 0
-        best_coverage_text = 0
+        best_coverage_text = ""
         for coverage_text in self.coverage_texts:
             from_mwh = coverage_text['from_megawatthours']
             if best_match < from_mwh < plant_possible_energy:
