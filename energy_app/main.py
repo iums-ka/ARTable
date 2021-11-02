@@ -176,16 +176,19 @@ class MapListener(ArucoAreaListener):
         self.reload()
 
     def on_enter(self, marker_id, position):
+        reset_tutorial_timer()
         self.do_marker_update(marker_id, position, "enter")
         self.update_statements(marker_id)
         self.sum_and_update()
 
     def on_move(self, marker_id, last_position, position):
+        reset_tutorial_timer()
         self.do_marker_update(marker_id, position, "move")
         self.sum_and_update()
 
     def on_leave(self, marker_id, last_position):
         global show_popup
+        reset_tutorial_timer()
         coords = self.table_pos_to_geocode(last_position)
         send("MARKER:leave:" + self.plants[marker_id]["name"] + ":" + str(coords[0]) + ":" + str(coords[1]))
         if self.popup_shown_for == marker_id:
@@ -365,6 +368,7 @@ class PlaceListener(ArucoAreaListener):
         self.reload()
 
     def on_enter(self, marker_id, position):
+        reset_tutorial_timer()
         if marker_id != self.keyboard_id:
             self.set_place(marker_id)
         else:
@@ -376,6 +380,7 @@ class PlaceListener(ArucoAreaListener):
         pass
 
     def on_leave(self, marker_id, last_position):
+        reset_tutorial_timer()
         if marker_id == self.keyboard_id:
             global typing
             print("Search disabled")
@@ -391,6 +396,7 @@ class PlaceListener(ArucoAreaListener):
 def key_input(key):
     global search, selected, results
     if typing:
+        reset_tutorial_timer()
         if str(key).replace("'", "") in "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-äöüÄÖÜß":
             search += str(key).replace("'", "")
             queue.put(None)
@@ -446,6 +452,7 @@ class YearListener(ArucoAreaListener):
         self.reload()
 
     def on_enter(self, marker_id, position):
+        reset_tutorial_timer()
         self.set_goals()
 
     def set_goals(self):
@@ -549,7 +556,15 @@ def switch_to_main():
 
     queue.put(None)
 
-    threading.Timer(10, switch_to_tutorial).start()  # todo when to reset?
+    reset_tutorial_timer()
+
+
+def reset_tutorial_timer():
+    global tutorial_timer
+    if tutorial_timer is not None:
+        tutorial_timer.cancel()
+    tutorial_timer = threading.Timer(tutorial_timeout, switch_to_tutorial)
+    tutorial_timer.start()
 
 
 def for_canonical(f):
@@ -575,6 +590,7 @@ if __name__ == '__main__':
     table = ARTableGL(Configuration("table.json"))
     ui = UI(table)
     tutorial_video_player = None
+    tutorial_timer = None
     place_name = "Baden-W\u00fcrttemberg"  # Vorher "Stadtkreis Karlsruhe
     # place_name = "Baden-Wuerttemberg"
     place_provider = PlaceProvider()
