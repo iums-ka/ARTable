@@ -143,14 +143,14 @@ class TutorialVideoPlayer(threading.Thread):
         return self.video_capture.read()[1]
 
     def run(self):
-        last_frame_time = 0
-        ns_per_frame = 0
+        last_frame_time = time.time_ns()
+        self._get_video_frame()
+        ns_per_frame = 1000000000/self.video_capture.get(cv2.CAP_PROP_FPS)
         while not self._stopped:
             while time.time_ns() - last_frame_time < ns_per_frame:
-                time.sleep((ns_per_frame - time.time_ns() + last_frame_time)/1000000)
+                time.sleep(max(ns_per_frame - time.time_ns() + last_frame_time, 1)/1000000000)
             last_frame_time = time.time_ns()
             self.current_video_frame = self._get_video_frame()
-            ns_per_frame = 1000000/self.video_capture.get(cv2.CAP_PROP_FPS)
             queue.put(None)
         self.current_video_frame = None
 
