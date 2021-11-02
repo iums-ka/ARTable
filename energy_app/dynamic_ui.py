@@ -113,6 +113,7 @@ class UI:
                 icon_parts = icon_file.split(".")[0].split("_")
                 img = Image.open(stakeholder_icon_path + icon_file)
                 self.stakeholder_icons[(icon_parts[0], icon_parts[1])] = gen_tex(img)
+        self.video_canvas_tex = glGenTextures(1)
         print("Done.")
 
     def set_position(self, target_bounds):
@@ -263,7 +264,8 @@ class UI:
                  coverage_goal, emission_goal, costings_goal,
                  coverage_sign, emission_sign, costings_sign,
                  search_data, visible_statements, active_year,
-                 show_tutorial, tutorial_page, show_info):
+                 show_tutorial, tutorial_page, tutorial_video_frame,
+                 show_info):
         # setup
         w = glutGetWindow()
         glutSetWindow(self.table.draw_context)
@@ -280,6 +282,13 @@ class UI:
         # tutorial
         if show_tutorial:
             self.fullscreen_composite(self.tutorial_tex[tutorial_page])
+            if tutorial_video_frame is not None:
+                img_data = tutorial_video_frame.data  # tutorial_video_frame.convert("RGBA").tobytes()
+                glBindTexture(GL_TEXTURE_2D, self.video_canvas_tex)
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tutorial_video_frame.shape[0], tutorial_video_frame.shape[1],
+                             0, GL_BGR, GL_UNSIGNED_BYTE, img_data)
+                glBindTexture(GL_TEXTURE_2D, 0)
+                self.composite(self.video_canvas_tex, 2073, 433, 2073+1377, 433+1377)
             glFlush()
             glBindFramebuffer(GL_FRAMEBUFFER, 0)
             glutSetWindow(w)

@@ -2,7 +2,9 @@ import json
 import locale
 import random
 import threading
+import time
 
+import cv2
 import pynput
 from pynput.keyboard import HotKey, Listener
 
@@ -106,6 +108,10 @@ class TutorialListener(ArucoAreaListener):
         print("show tutorial page", self.action_id)
         tutorial_visible = True
         tutorial_page = self.action_id
+        if 1 <= self.action_id <= 4:
+            start_tutorial_video_player("resources/tutorial-page-" + str(self.action_id) + "-video.mp4")
+        else:
+            disable_tutorial_video_player()
         queue.put(None)
 
     def on_move(self, marker_id, last_position, position):
@@ -113,6 +119,44 @@ class TutorialListener(ArucoAreaListener):
 
     def on_leave(self, marker_id, last_position):
         pass
+
+
+class TutorialVideoPlayer(threading.Thread):
+    def __init__(self, filename):
+        super().__init__()
+        self._filename = filename
+        self._stopped = False
+        self.video_capture = cv2.VideoCapture()
+        self.current_video_frame = None
+
+    def _get_video_frame(self):
+        success, frame = self.video_capture.read()
+        if success:
+            return frame
+        if not self.video_capture.isOpened():
+            self.video_capture.open(self._filename)
+        else:
+            self.video_capture.set(cv2.CAP_PROP_POS_FRAMES, 0)
+        return self.video_capture.read()[1]
+
+    def run(self):
+        last_frame_time = 0
+        ns_per_frame = 0
+        while not self._stopped:
+            while time.time_ns() - last_frame_time < ns_per_frame:
+                time.sleep((ns_per_frame - time.time_ns() + last_frame_time)/1000000)
+            self.current_video_frame = self._get_video_frame()
+            ns_per_frame = 1000000/self.video_capture.get(cv2.CAP_PROP_FPS)
+            queue.put(None)
+            last_frame_time = time.time_ns()
+        self.current_video_frame = None
+
+    def get_current_frame(self):
+        return self.current_video_frame
+
+    def stop_and_wait(self):
+        self._stopped = True
+        self.join()
 
 
 class InfoListener(ArucoAreaListener):
@@ -456,6 +500,7 @@ class YearListener(ArucoAreaListener):
 
 
 def update_table():
+    tutorial_video_frame = tutorial_video_player.get_current_frame() if tutorial_video_player is not None else None
     search_data = (search, selected, results) if typing else None
     ui.rendergl(place_name, place_population, place_energy,
                 show_popup, popup_position, popup_dataline, popup_text,
@@ -465,7 +510,8 @@ def update_table():
                 coverage_goal, emission_goal, cost_goal, # [0,1] u {-1}
                 coverage_sign, emission_sign, cost_sign, # {-1, 0, 1}
                 search_data, visible_statments, active_year,
-                tutorial_visible, tutorial_page, info_visible
+                tutorial_visible, tutorial_page, tutorial_video_frame,
+                info_visible
                 )
 
 
@@ -497,7 +543,23 @@ def switch_to_tutorial():
     queue.put(None)
 
 
+def disable_tutorial_video_player():
+    global tutorial_video_player
+    if tutorial_video_player is not None:
+        tutorial_video_player.stop_and_wait()
+        tutorial_video_player = None
+
+
+def start_tutorial_video_player(filename):
+    global tutorial_video_player
+    disable_tutorial_video_player()
+    tutorial_video_player = TutorialVideoPlayer(filename)
+    tutorial_video_player.start()
+
+
 def switch_to_main():
+    disable_tutorial_video_player()
+
     aruco.remove_listener(tutorial_listener_0)
     aruco.remove_listener(tutorial_listener_1)
     aruco.remove_listener(tutorial_listener_2)
@@ -537,6 +599,7 @@ if __name__ == '__main__':
     keyboard_listener.start()
     table = ARTableGL(Configuration("table.json"))
     ui = UI(table)
+    tutorial_video_player = None
     place_name = "Baden-W\u00fcrttemberg"  # Vorher "Stadtkreis Karlsruhe
     # place_name = "Baden-Wuerttemberg"
     place_provider = PlaceProvider()
