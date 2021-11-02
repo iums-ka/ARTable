@@ -43,8 +43,10 @@ def send(text):
     else:
         print(text)
 
+
 def cmp(a, b):
     return bool(a > b) - bool(a < b)
+
 
 class OverlayListener(ArucoAreaListener):
     def reload(self):
@@ -100,8 +102,9 @@ class TutorialListener(ArucoAreaListener):
 
     def on_enter(self, marker_id, position):
         global tutorial_visible, tutorial_page
+        if tutorial_page == self.action_id:
+            return
         if self.action_id == -1:
-            print("end tutorial")
             tutorial_visible = False
             switch_to_main()
             return
@@ -145,10 +148,10 @@ class TutorialVideoPlayer(threading.Thread):
         while not self._stopped:
             while time.time_ns() - last_frame_time < ns_per_frame:
                 time.sleep((ns_per_frame - time.time_ns() + last_frame_time)/1000000)
+            last_frame_time = time.time_ns()
             self.current_video_frame = self._get_video_frame()
             ns_per_frame = 1000000/self.video_capture.get(cv2.CAP_PROP_FPS)
             queue.put(None)
-            last_frame_time = time.time_ns()
         self.current_video_frame = None
 
     def get_current_frame(self):
@@ -527,6 +530,9 @@ def reload_configs():
 
 
 def switch_to_tutorial():
+    global tutorial_page, tutorial_visible
+    print("start tutorial")
+
     aruco.remove_listener(map_listener)
     aruco.remove_listener(place_listener)
     aruco.remove_listener(year_2020_listener)
@@ -540,6 +546,10 @@ def switch_to_tutorial():
     aruco.add_listener(tutorial_listener_3)
     aruco.add_listener(tutorial_listener_4)
     aruco.add_listener(tutorial_listener_s)
+
+    tutorial_page = 0
+    tutorial_visible = True
+
     queue.put(None)
 
 
@@ -558,6 +568,8 @@ def start_tutorial_video_player(filename):
 
 
 def switch_to_main():
+    print("end tutorial")
+
     disable_tutorial_video_player()
 
     aruco.remove_listener(tutorial_listener_0)
@@ -573,7 +585,9 @@ def switch_to_main():
     aruco.add_listener(year_2030_listener)
     aruco.add_listener(year_2050_listener)
     aruco.add_listener(info_listener)
+
     queue.put(None)
+
     threading.Timer(10, switch_to_tutorial).start()  # todo when to reset?
 
 
