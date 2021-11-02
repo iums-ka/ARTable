@@ -48,45 +48,6 @@ def cmp(a, b):
     return bool(a > b) - bool(a < b)
 
 
-class OverlayListener(ArucoAreaListener):
-    def reload(self):
-        map_conf = json.load(open("resources/plant_types.json", mode="r", encoding="utf-8"))
-        ids = []
-        for plant in map_conf["types"]:
-            ids.append(plant["marker"])
-        self.set_ids(ids)
-
-    def __init__(self, area):
-        super().__init__(area, delta=10, time_threshold=2)
-        self.update_timer = None
-        self.reload()
-
-    def on_enter(self, marker_id, position):
-        self.hide()
-
-    def on_move(self, marker_id, last_position, position):
-        self.hide()
-
-    def on_leave(self, marker_id, last_position):
-        self.hide()
-
-    def hide(self):
-        global tutorial_visible
-        tutorial_visible = False
-        print("hide tutorial due to interaction")
-        if self.update_timer is not None:
-            self.update_timer.cancel()
-        self.update_timer = threading.Timer(tutorial_timeout, self.show)
-        self.update_timer.start()
-        queue.put(None)  # call for update
-
-    def show(self):
-        global tutorial_visible
-        tutorial_visible = True
-        print("show tutorial due to no interaction")
-        queue.put(None)  # call for update
-
-
 class TutorialListener(ArucoAreaListener):
     def reload(self):
         ids = []
