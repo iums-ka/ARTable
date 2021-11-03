@@ -288,7 +288,7 @@ class UI:
                 glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tutorial_video_frame.shape[0], tutorial_video_frame.shape[1],
                              0, GL_BGR, GL_UNSIGNED_BYTE, img_data)
                 glBindTexture(GL_TEXTURE_2D, 0)
-                self.composite(self.video_canvas_tex, 2073, 433, 2073+1377, 433+1377)
+                self.composite(self.video_canvas_tex, 1675, 433, 1675+1380, 433+1380)
             glFlush()
             glBindFramebuffer(GL_FRAMEBUFFER, 0)
             glutSetWindow(w)
