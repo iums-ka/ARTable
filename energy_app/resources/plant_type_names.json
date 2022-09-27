@@ -1,9 +1,0 @@
-{
-  "solar": "Solaranlage",
-  "wind": "Windpark",
-  "water": "Wasserkraftwerk",
-  "bio": "Biogasanlage",
-  "gas": "Erdgaskraftwerk",
-  "coal": "Kohlekraftwerk",
-  "atom": "Atomkraftwerk"
-}

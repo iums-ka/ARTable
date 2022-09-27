@@ -1,6 +1,0 @@
-{
-    "name": "wmflabs Hillshading",
-    "attribution": "© OpenStreetMap contributors\nhttp://www.openstreetmap.org/copyright",
-    "url": "http://tiles.wmflabs.org/hillshading/{z}/{x}/{y}.{ext}",
-    "limit": 2
-}
