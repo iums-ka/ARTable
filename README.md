@@ -1,5 +1,5 @@
 # ARTable
-Interactive Projection Framework based on Katze.
+Interactive Projection Framework.
 
 ## Concept
 The ARTable Class handles all the calibrating and displaying. It can 
